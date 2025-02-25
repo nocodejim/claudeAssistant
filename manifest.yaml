@@ -24,13 +24,6 @@ menus:
     icon: claudeAssistant-icon
     isActive: true
     entries: 
-      - name: claude_testConnection
-        caption: Test Connection
-        tooltip: Test connectivity to Claude API
-        icon: fa-regular fa-plug
-        isActive: true
-        actionTypeId: 2
-        action: testConnection
       - name: claude_generateTestCases
         caption: Generate Test Cases
         tooltip: Generate test cases to cover key aspects of this requirement, using Claude AI
@@ -38,6 +31,20 @@ menus:
         actionTypeId: 2
         action: generateTestCases
         isActive: true
+      - name: claude_generateTasks
+        caption: Generate Tasks
+        tooltip: Generate development tasks to implement this requirement, using Claude AI 
+        icon: icon-artifact-task
+        actionTypeId: 2
+        action: generateTasks
+        isActive: true
+      - name: claude_generateSteps
+        caption: Generate BDD Scenarios
+        tooltip: Generate Gherkin syntax BDD scenarios for this requirement, using Claude AI
+        icon: icon-artifact-requirement-step
+        actionTypeId: 2
+        action: generateSteps
+        isActive: true  
 
 pageContents:
   - pageId: 9
@@ -97,3 +104,19 @@ productSettings:
     caption: Use Artifact Descriptions
     position: 2
     tooltip: Should we use the artifact descriptions as well as the names in the prompts?
+
+  - settingTypeId: 9
+    settingGroup: prompts
+    name: task_prompt
+    caption: Task Prompt
+    position: 3
+    placeholder: "Write the development tasks for the following software requirement. For each task include the name and description in the following format { \"Tasks\": [{ \"Name\": [name in plain text], \"Description\": [description in plain text] }] }"
+    tooltip: This prompt is used to generate the tasks from the requirement.
+
+  - settingTypeId: 9
+    settingGroup: prompts
+    name: bdd_prompt
+    caption: BDD Prompt
+    position: 4
+    placeholder: "Write BDD scenarios for this requirement in Gherkin format with Name, Given, When, Then fields."
+    tooltip: This prompt is used to generate the BDD steps for the requirement.

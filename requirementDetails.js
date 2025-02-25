@@ -10,7 +10,11 @@ const messages = {
     UNKNOWN_ERROR: "Claude Assistant: Unknown Error, please check the browser console or try again!",
     MISSING_SETTINGS: "Claude Assistant: You need to populate the system settings to use this application!",
     MISSING_SETTING: "Claude Assistant: You need to populate the '{0}' system setting to use this application!",
-    ARTIFACT_TEST_CASES: "test cases"
+    ARTIFACT_TEST_CASES: "test cases",
+    REQUIREMENT_NOT_STEPS: "Claude Assistant: The current requirement is of a type that does not support BDD steps. Please change the requirement type and try again!",
+    NO_REQUIREMENT_TYPES: "Claude Assistant: Fatal error, could not get any requirement types from Spira - please try again!",
+    ARTIFACT_BDD_STEPS: "BDD steps",
+    ARTIFACT_TASKS: "tasks"
 };
 
 const artifactType = {
@@ -473,10 +477,626 @@ function claude_generateTestCasesFromChoice_success3(remoteTestStep) {
     localState.running = false;
 }
 
+// ---- Task Generation ----
+
+function claude_generateTasks() {
+    console.log("Starting task generation...");
+    
+    var canCreateTasks = spiraAppManager.canCreateArtifactType(artifactType.TASK);
+    console.log("Can create tasks:", canCreateTasks);
+
+    // Verify required settings
+    if (!claude_verifyRequiredSettings()) {
+        return;
+    }
+
+    // Make sure call not already running
+    if (localState.running) {
+        spiraAppManager.displayWarningMessage(messages.WAIT_FOR_OTHER_JOB.replace("{0}", messages.ARTIFACT_TASKS));
+        return;
+    }
+
+    // Clear local storage and specify the action
+    localState = {
+        "action": "generateTasks",
+        "running": true
+    };
+
+    // Don't let users try and create tasks if they do not have permission to do so
+    if (!canCreateTasks) {
+        spiraAppManager.displayErrorMessage(messages.PERMISSION_ERROR);
+        localState.running = false;
+    }
+    else {
+        // Get the current requirement artifact (we need to get its name)
+        var requirementId = spiraAppManager.artifactId;
+        console.log("Retrieving requirement data for ID:", requirementId);
+        
+        var url = 'projects/' + spiraAppManager.projectId + '/requirements/' + requirementId;
+        spiraAppManager.executeApi(
+            'claudeAssistant', 
+            '7.0', 
+            'GET', 
+            url, 
+            null, 
+            claude_getRequirementData_success, 
+            claude_operation_failure
+        );
+    }
+}
+
+// Update the existing claude_getRequirementData_success function to handle tasks too
+function claude_getRequirementData_success(remoteRequirement) {
+    console.log("Requirement data retrieved:", remoteRequirement);
+    
+    if (remoteRequirement) {
+        // Store for later
+        localState.remoteRequirement = remoteRequirement;
+
+        // Create the prompt
+        var systemPrompt = "You are a business analyst that only speaks in JSON. Do not generate output that isn't in properly formatted JSON.";
+        if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].global_prompt) {
+            systemPrompt = SpiraAppSettings[APP_GUID].global_prompt;
+        }
+
+        // Add different prompts based on action
+        if (localState.action == 'generateTestCases') {
+            var testCasePrompt = " Write the test cases for the following software requirement. For each test case include the description, input and expected output in the following format { \"TestCases\": [{ \"Description\": [Description of test case], \"Input\": [Sample input in plain text], \"ExpectedOutput\": [Expected output in plain text] }] }";
+            if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].testcase_prompt) {
+                testCasePrompt = SpiraAppSettings[APP_GUID].testcase_prompt;
+            }
+            systemPrompt += testCasePrompt;
+        }
+        else if (localState.action == 'generateTasks') {
+            var taskPrompt = " Write the development tasks for the following software requirement. For each task include the name and description in the following format { \"Tasks\": [{ \"Name\": [name in plain text], \"Description\": [description in plain text] }] }";
+            if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].task_prompt) {
+                taskPrompt = SpiraAppSettings[APP_GUID].task_prompt;
+            }
+            systemPrompt += taskPrompt;
+        }
+        else {
+            // Unknown action
+            spiraAppManager.displayErrorMessage("Claude Assistant: Unknown action - " + localState.action);
+            localState.running = false;
+            return;
+        }
+        
+        // Specify the user prompt, use the name and optionally the description of the artifact
+        var userPrompt = remoteRequirement.Name;
+        if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].artifact_descriptions == 'True') {
+            userPrompt += ". " + spiraAppManager.convertHtmlToPlainText(remoteRequirement.Description);
+        }
+
+        console.log("Sending to Claude with prompt:", {
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt
+        });
+        
+        // Send the Claude request
+        claude_executeApiRequest(
+            systemPrompt, 
+            userPrompt, 
+            claude_processResponse, 
+            claude_operation_failure
+        );
+    }
+    else {
+        spiraAppManager.displayErrorMessage(messages.EMPTY_REQUIREMENT);
+        localState.running = false;   
+    }
+}
+
+// Update the claude_processResponse function to handle tasks
+function claude_processResponse(response) {
+    console.log("Claude API response received:", response);
+    
+    if (!response) {
+        spiraAppManager.displayErrorMessage(messages.NO_RESPONSE);
+        localState.running = false;
+        return;
+    }
+
+    // Check for error response
+    if (response.statusCode != 200) {
+        // Error Message from Claude
+        var message = response.statusDescription;
+        if (response.content) {
+            try {
+                var messageObj = JSON.parse(response.content);
+                if (messageObj.error && messageObj.error.message) {
+                    message = messageObj.error.message;
+                }
+            } catch (e) {
+                console.error("Error parsing error response:", e);
+            }
+        }
+        var code = response.statusCode;
+        if (message && code != 0) {
+            spiraAppManager.displayErrorMessage('Claude Assistant: ' + message + ' [' + code + ']');
+        } else {
+            spiraAppManager.displayErrorMessage(messages.UNKNOWN_ERROR);
+            console.log(response);
+        }
+        localState.running = false;
+        return;
+    }
+
+    // Get the response and parse out
+    if (!response.content) {
+        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+        console.log(response);
+        localState.running = false;
+        return;
+    }
+
+    // Need to deserialize the content
+    try {
+        var content = JSON.parse(response.content);
+        console.log("Parsed response content:", content);
+        
+        if (!content.content) {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+            console.log(content);
+            localState.running = false;
+            return;
+        }
+
+        // Get the actual text from Claude response 
+        var generation = content.content[0].text;
+        console.log("Generated content:", generation);
+
+        // See what action we had and call the appropriate parsing function
+        if (localState.action == 'generateTestCases') {
+            claude_generateTestCasesFromChoice(generation);
+        }
+        else if (localState.action == 'generateTasks') {
+            claude_generateTasksFromChoice(generation);
+        }
+        else {
+            localState.running = false;
+        }
+    } catch (e) {
+        console.error("Error parsing response:", e);
+        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+        localState.running = false;
+    }
+}
+
+// Add task generation from choice function
+function claude_generateTasksFromChoice(generation) {
+    console.log("Processing tasks from Claude response");
+    
+    // Get the message
+    if (generation) {
+        // Convert to a JSON string
+        var json = claude_cleanJSON(generation);
+        console.log("Cleaned JSON:", json);
+
+        // We need to convert into a JSON object and verify layout
+        var jsonObj = null;
+        try {
+            jsonObj = JSON.parse(json);
+            console.log("Parsed JSON object:", jsonObj);
+        }
+        catch (e) {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_TASKS));
+            console.log("JSON parse error:", e);
+            console.log("Raw JSON:", json);
+            return;
+        }
+        
+        // Check for tasks array (could be "Tasks" or "DevelopmentTasks" depending on prompt)
+        var tasks = null;
+        if (jsonObj && jsonObj.Tasks && Array.isArray(jsonObj.Tasks)) {
+            tasks = jsonObj.Tasks;
+        } else if (jsonObj && jsonObj.DevelopmentTasks && Array.isArray(jsonObj.DevelopmentTasks)) {
+            tasks = jsonObj.DevelopmentTasks;
+        }
+        
+        if (tasks) {
+            console.log("Found tasks array:", tasks);
+            
+            // Loop through the results and get the tasks
+            localState.taskCount = tasks.length;
+            for (var i = 0; i < tasks.length; i++) {
+                // Now get each task
+                var task = tasks[i];
+                console.log("Processing task:", task);
+
+                // Get the name and description 
+                var taskName = task.Name;
+                var taskDescription = task.Description;
+
+                // Create the new task
+                if (taskName) {
+                    var requirementId = spiraAppManager.artifactId;
+                    var remoteTask = {
+                        ProjectId: spiraAppManager.projectId,
+                        RequirementId: requirementId,
+                        Name: taskName,
+                        Description: taskDescription,
+                        TaskStatusId: /* Not Started */1,
+                        TaskTypeId: null   // Default
+                    };
+
+                    console.log("Creating task:", remoteTask);
+
+                    // Call the API to create
+                    const url = 'projects/' + spiraAppManager.projectId + '/tasks';
+                    const body = JSON.stringify(remoteTask);
+                    spiraAppManager.executeApi(
+                        'claudeAssistant', 
+                        '7.0', 
+                        'POST', 
+                        url, 
+                        body, 
+                        claude_generateTasksFromChoice_success, 
+                        claude_operation_failure
+                    );    
+                }
+            }
+        }
+        else {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_TASKS));
+            console.log("Invalid JSON structure - missing Tasks array:", jsonObj);
+            return;
+        }
+    }
+}
+
+// Add task creation success handler
+function claude_generateTasksFromChoice_success(remoteTask) {
+    console.log("Task created successfully:", remoteTask);
+    
+    // Reset the dialog and force the form manager to reload once all tasks have been created
+    localState.taskCount--;
+    if (localState.taskCount == 0) {
+        spiraAppManager.hideMessage();
+        spiraAppManager.reloadForm();
+        spiraAppManager.displaySuccessMessage('Successfully created tasks from Claude Assistant.');
+    }
+    localState.running = false;
+}
+
+// ---- Requirement BDD Step Generation ----
+
+function claude_generateSteps() {
+    console.log("Starting BDD scenario generation...");
+    
+    var canModifyRequirements = spiraAppManager.canModifyArtifactType(artifactType.REQUIREMENT);
+    console.log("Can modify requirements:", canModifyRequirements);
+
+    // Verify required settings
+    if (!claude_verifyRequiredSettings()) {
+        return;
+    }
+
+    // Make sure call not already running
+    if (localState.running) {
+        spiraAppManager.displayWarningMessage(messages.WAIT_FOR_OTHER_JOB.replace("{0}", messages.ARTIFACT_BDD_STEPS));
+        return;
+    }
+
+    // Clear local storage and specify the action
+    localState = {
+        "action": "generateSteps",
+        "running": true
+    };
+
+    // Don't let users try and create requirement steps if they do not have permission
+    if (!canModifyRequirements) {
+        spiraAppManager.displayErrorMessage(messages.PERMISSION_ERROR);
+        localState.running = false;
+    }
+    else {
+        // Get the current requirement artifact
+        var requirementId = spiraAppManager.artifactId;
+        console.log("Retrieving requirement data for ID:", requirementId);
+        
+        var url = 'projects/' + spiraAppManager.projectId + '/requirements/' + requirementId;
+        spiraAppManager.executeApi(
+            'claudeAssistant', 
+            '7.0', 
+            'GET', 
+            url, 
+            null, 
+            function(remoteRequirement) {
+                // Check if this requirement exists
+                if (!remoteRequirement) {
+                    spiraAppManager.displayErrorMessage(messages.EMPTY_REQUIREMENT);
+                    localState.running = false;
+                    return;
+                }
+                
+                // Store for later use
+                localState.remoteRequirement = remoteRequirement;
+                
+                // Now get requirement types to check if this type supports steps
+                var url = 'project-templates/' + spiraAppManager.projectTemplateId + '/requirements/types';
+                spiraAppManager.executeApi(
+                    'claudeAssistant', 
+                    '7.0', 
+                    'GET', 
+                    url, 
+                    null, 
+                    claude_getRequirementTypes_success, 
+                    claude_operation_failure
+                );
+            }, 
+            claude_operation_failure
+        );
+    }
+}
+
+function claude_getRequirementTypes_success(remoteRequirementTypes) {
+    var remoteRequirement = localState.remoteRequirement;
+    
+    if (remoteRequirementTypes && remoteRequirement) {
+        // Check if the requirement type supports steps
+        var supportsSteps = false;
+        
+        for (var i = 0; i < remoteRequirementTypes.length; i++) {
+            var remoteRequirementType = remoteRequirementTypes[i];
+            if (remoteRequirementType.RequirementTypeId == remoteRequirement.RequirementTypeId) {
+                if (remoteRequirementType.IsSteps) {
+                    supportsSteps = true;
+                }
+                break;
+            }
+        }
+        
+        if (!supportsSteps) {
+            // This requirement type doesn't support steps
+            spiraAppManager.displayErrorMessage(messages.REQUIREMENT_NOT_STEPS);
+            localState.running = false;
+            return;
+        }
+        
+        // Create the prompt
+        var systemPrompt = "You are a business analyst that only speaks in JSON. Do not generate output that isn't in properly formatted JSON.";
+        if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].global_prompt) {
+            systemPrompt = SpiraAppSettings[APP_GUID].global_prompt;
+        }
+        
+        // Add BDD prompt
+        var bddPrompt = " Write the BDD scenarios for the following software requirement. For each scenario use the following Gherkin format { \"Scenarios\": [{ \"Name\": [The name of the scenario], \"Given\": [single setup in plain text], \"When\": [single action in plain text], \"Then\": [single assertion in plain text] }] }";
+        if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].bdd_prompt) {
+            bddPrompt = SpiraAppSettings[APP_GUID].bdd_prompt;
+        }
+        systemPrompt += bddPrompt;
+        
+        // Specify the user prompt, use the name and optionally the description of the artifact
+        var userPrompt = remoteRequirement.Name;
+        if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].artifact_descriptions == 'True') {
+            userPrompt += ". " + spiraAppManager.convertHtmlToPlainText(remoteRequirement.Description);
+        }
+        
+        console.log("Sending to Claude with prompt:", {
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt
+        });
+        
+        // Send the Claude request
+        claude_executeApiRequest(
+            systemPrompt, 
+            userPrompt, 
+            claude_processStepsResponse, 
+            claude_operation_failure
+        );
+    }
+    else {
+        spiraAppManager.displayErrorMessage(messages.NO_REQUIREMENT_TYPES);
+        localState.running = false;
+    }
+}
+
+function claude_processStepsResponse(response) {
+    console.log("Claude API response received for BDD scenarios:", response);
+    
+    if (!response) {
+        spiraAppManager.displayErrorMessage(messages.NO_RESPONSE);
+        localState.running = false;
+        return;
+    }
+
+    // Check for error response
+    if (response.statusCode != 200) {
+        // Error Message from Claude
+        var message = response.statusDescription;
+        if (response.content) {
+            try {
+                var messageObj = JSON.parse(response.content);
+                if (messageObj.error && messageObj.error.message) {
+                    message = messageObj.error.message;
+                }
+            } catch (e) {
+                console.error("Error parsing error response:", e);
+            }
+        }
+        var code = response.statusCode;
+        if (message && code != 0) {
+            spiraAppManager.displayErrorMessage('Claude Assistant: ' + message + ' [' + code + ']');
+        } else {
+            spiraAppManager.displayErrorMessage(messages.UNKNOWN_ERROR);
+            console.log(response);
+        }
+        localState.running = false;
+        return;
+    }
+
+    // Get the response and parse out
+    if (!response.content) {
+        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+        console.log(response);
+        localState.running = false;
+        return;
+    }
+
+    // Need to deserialize the content
+    try {
+        var content = JSON.parse(response.content);
+        console.log("Parsed response content:", content);
+        
+        if (!content.content) {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+            console.log(content);
+            localState.running = false;
+            return;
+        }
+
+        // Get the actual text from Claude response 
+        var generation = content.content[0].text;
+        console.log("Generated BDD scenarios:", generation);
+
+        claude_generateStepsFromChoice(generation);
+    } catch (e) {
+        console.error("Error parsing response:", e);
+        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+        localState.running = false;
+    }
+}
+
+function claude_generateStepsFromChoice(generation) {
+    console.log("Processing BDD scenarios from Claude response");
+    
+    // Get the message
+    if (generation) {
+        // Convert to a JSON string
+        var json = claude_cleanJSON(generation);
+        console.log("Cleaned JSON:", json);
+
+        // We need to convert into a JSON object and verify layout
+        var jsonObj = null;
+        try {
+            jsonObj = JSON.parse(json);
+            console.log("Parsed JSON object:", jsonObj);
+        }
+        catch (e) {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_BDD_STEPS));
+            console.log("JSON parse error:", e);
+            console.log("Raw JSON:", json);
+            return;
+        }
+        
+        if (jsonObj && jsonObj.Scenarios && Array.isArray(jsonObj.Scenarios)) {
+            console.log("Found scenarios array:", jsonObj.Scenarios);
+            
+            // Loop through the results and get the BDD steps
+            localState.stepCount = jsonObj.Scenarios.length;
+            for (var i = 0; i < jsonObj.Scenarios.length; i++) {
+                // Get each scenario
+                var scenario = jsonObj.Scenarios[i];
+                console.log("Processing scenario:", scenario);
+
+                // Extract the parts of the scenario
+                var scenarioName = scenario.Name;
+                var scenarioGiven = scenario.Given;
+                var scenarioWhen = scenario.When;
+                var scenarioThen = scenario.Then;
+
+                // Create the new scenarios as steps
+                if (scenarioName && scenarioGiven && scenarioWhen && scenarioThen) {
+                    // Construct the formatted string similar to Azure OpenAI implementation
+                    var description = '<p><b>Scenario: ' + scenarioName +'</b></p>\n<ul><li><b>Given</b> ' + scenarioGiven + '</li>\n<li><b>When</b> ' + scenarioWhen + '</li>\n<li><b>Then</b> ' + scenarioThen + "</li></ul>";
+
+                    var requirementId = spiraAppManager.artifactId;
+                    var remoteRequirementStep = {
+                        ProjectId: spiraAppManager.projectId,
+                        RequirementId: requirementId,
+                        Description: description,
+                        CreationDate: new Date().toISOString()
+                    };
+
+                    console.log("Creating requirement step:", remoteRequirementStep);
+
+                    // Call the API to create
+                    const url = 'projects/' + spiraAppManager.projectId + '/requirements/' + requirementId + '/steps';
+                    const body = JSON.stringify(remoteRequirementStep);
+                    spiraAppManager.executeApi(
+                        'claudeAssistant', 
+                        '7.0', 
+                        'POST', 
+                        url, 
+                        body, 
+                        claude_generateStepsFromChoice_success, 
+                        claude_operation_failure
+                    );    
+                }
+            }
+        }
+        else {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_BDD_STEPS));
+            console.log("Invalid JSON structure - missing Scenarios array:", jsonObj);
+            return;
+        }
+    }
+}
+
+function claude_generateStepsFromChoice_success(remoteRequirementStep) {
+    console.log("Requirement step created successfully:", remoteRequirementStep);
+    
+    // Reset the dialog and force the form manager and scenario grid to reload once all steps have been created
+    localState.stepCount--;
+    if (localState.stepCount == 0) {
+        spiraAppManager.hideMessage();
+        spiraAppManager.reloadForm();
+        
+        // Reload the steps grid if present
+        if (spiraAppManager.gridIds && spiraAppManager.gridIds.requirementSteps) {
+            spiraAppManager.reloadGrid(spiraAppManager.gridIds.requirementSteps);
+        }
+        
+        spiraAppManager.displaySuccessMessage('Successfully created BDD Scenario Steps from Claude Assistant.');
+    }
+    localState.running = false;
+}
+
+// Update our existing process response function to handle steps
+function claude_processResponse(response) {
+    // Existing code...
+    
+    try {
+        var content = JSON.parse(response.content);
+        console.log("Parsed response content:", content);
+        
+        if (!content.content) {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+            console.log(content);
+            localState.running = false;
+            return;
+        }
+
+        // Get the actual text from Claude response 
+        var generation = content.content[0].text;
+        console.log("Generated content:", generation);
+
+        // See what action we had and call the appropriate parsing function
+        if (localState.action == 'generateTestCases') {
+            claude_generateTestCasesFromChoice(generation);
+        }
+        else if (localState.action == 'generateTasks') {
+            claude_generateTasksFromChoice(generation);
+        }
+        else if (localState.action == 'generateSteps') {
+            claude_generateStepsFromChoice(generation);
+        }
+        else {
+            localState.running = false;
+        }
+    } catch (e) {
+        console.error("Error parsing response:", e);
+        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+        localState.running = false;
+    }
+}
+
 // Register event handlers for menu clicks
 console.log("Registering menu click events for APP_GUID:", APP_GUID);
 spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "generateTestCases", claude_generateTestCases);
 spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "testConnection", testClaudeConnection);
+spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "generateTasks", claude_generateTasks);
+spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "generateSteps", claude_generateSteps);
+
 
 // Log when the script loads
 console.log("Claude Assistant requirement details script loaded at", new Date().toISOString());
