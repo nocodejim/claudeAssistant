@@ -1,0 +1,25 @@
+/* Claude Assistant SpiraApp styles */
+
+.claudeAssistant-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    vertical-align: middle;
+    margin-right: 0.25em;
+}
+
+.claudeAssistant-processing {
+    color: #575CC4;
+    font-style: italic;
+}
+
+.claudeAssistant-success {
+    color: #27ae60;
+}
+
+.claudeAssistant-error {
+    color: #e74c3c;
+}
