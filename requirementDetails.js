@@ -14,7 +14,8 @@ const messages = {
     REQUIREMENT_NOT_STEPS: "Claude Assistant: The current requirement is of a type that does not support BDD steps. Please change the requirement type and try again!",
     NO_REQUIREMENT_TYPES: "Claude Assistant: Fatal error, could not get any requirement types from Spira - please try again!",
     ARTIFACT_BDD_STEPS: "BDD steps",
-    ARTIFACT_TASKS: "tasks"
+    ARTIFACT_TASKS: "tasks",
+    ARTIFACT_RISKS: "risks"
 };
 
 const artifactType = {
@@ -1053,7 +1054,6 @@ function claude_generateStepsFromChoice_success(remoteRequirementStep) {
 
 // Update our existing process response function to handle steps
 function claude_processResponse(response) {
-    // Existing code...
     
     try {
         var content = JSON.parse(response.content);
@@ -1090,12 +1090,350 @@ function claude_processResponse(response) {
     }
 }
 
+// ----Risks Generation ----
+// Risk generation functions
+function claude_generateRisks() {
+    console.log("Starting risk generation...");
+    
+    var canCreateRisks = spiraAppManager.canCreateArtifactType(artifactType.RISK);
+    var canModifyRequirements = spiraAppManager.canModifyArtifactType(artifactType.REQUIREMENT);
+    
+    console.log("Permissions check:", { 
+        canCreateRisks: canCreateRisks, 
+        canModifyRequirements: canModifyRequirements 
+    });
+
+    // Verify required settings
+    if (!claude_verifyRequiredSettings()) {
+        return;
+    }
+
+    // Make sure call not already running
+    if (localState.running) {
+        spiraAppManager.displayWarningMessage(messages.WAIT_FOR_OTHER_JOB.replace("{0}", messages.ARTIFACT_RISKS));
+        return;
+    }
+
+    // Clear local storage and specify the action
+    localState = {
+        "action": "generateRisks",
+        "running": true
+    };
+
+    // Don't let users try and create risks if they do not have permission to do so
+    if (!canCreateRisks || !canModifyRequirements) {
+        spiraAppManager.displayErrorMessage(messages.PERMISSION_ERROR);
+        localState.running = false;
+    }
+    else {
+        // Get the current requirement artifact
+        var requirementId = spiraAppManager.artifactId;
+        console.log("Retrieving requirement data for ID:", requirementId);
+        
+        var url = 'projects/' + spiraAppManager.projectId + '/requirements/' + requirementId;
+        spiraAppManager.executeApi(
+            'claudeAssistant', 
+            '7.0', 
+            'GET', 
+            url, 
+            null, 
+            claude_getRiskRequirementData_success, 
+            claude_operation_failure
+        );
+    }
+}
+
+function claude_getRiskRequirementData_success(remoteRequirement) {
+    console.log("Requirement data retrieved for risk generation:", remoteRequirement);
+    
+    if (remoteRequirement) {
+        // Create the prompt
+        var systemPrompt = "You are a business analyst that only speaks in JSON. Do not generate output that isn't in properly formatted JSON.";
+        if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].global_prompt) {
+            systemPrompt = SpiraAppSettings[APP_GUID].global_prompt;
+        }
+        
+        // Add Risk prompt
+        var riskPrompt = " Identify the possible business and technical risks for the following software requirement. For each risk include the name and description in the following format { \"Risks\": [{ \"Name\": [name in plain text], \"Description\": [description in plain text] }] }";
+        if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].risk_prompt) {
+            riskPrompt = SpiraAppSettings[APP_GUID].risk_prompt;
+        }
+        systemPrompt += riskPrompt;
+        
+        // Specify the user prompt, use the name and optionally the description of the artifact
+        var userPrompt = remoteRequirement.Name;
+        if (SpiraAppSettings[APP_GUID] && SpiraAppSettings[APP_GUID].artifact_descriptions == 'True') {
+            userPrompt += ". " + spiraAppManager.convertHtmlToPlainText(remoteRequirement.Description);
+        }
+        
+        console.log("Sending to Claude with prompt:", {
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt
+        });
+        
+        // Send the Claude request
+        claude_executeApiRequest(
+            systemPrompt, 
+            userPrompt, 
+            claude_processRiskResponse, 
+            claude_operation_failure
+        );
+    }
+    else {
+        spiraAppManager.displayErrorMessage(messages.EMPTY_REQUIREMENT);
+        localState.running = false;   
+    }
+}
+
+function claude_processRiskResponse(response) {
+    console.log("Claude API response received for risks:", response);
+    
+    if (!response) {
+        spiraAppManager.displayErrorMessage(messages.NO_RESPONSE);
+        localState.running = false;
+        return;
+    }
+
+    // Check for error response
+    if (response.statusCode != 200) {
+        // Error Message from Claude
+        var message = response.statusDescription;
+        if (response.content) {
+            try {
+                var messageObj = JSON.parse(response.content);
+                if (messageObj.error && messageObj.error.message) {
+                    message = messageObj.error.message;
+                }
+            } catch (e) {
+                console.error("Error parsing error response:", e);
+            }
+        }
+        var code = response.statusCode;
+        if (message && code != 0) {
+            spiraAppManager.displayErrorMessage('Claude Assistant: ' + message + ' [' + code + ']');
+        } else {
+            spiraAppManager.displayErrorMessage(messages.UNKNOWN_ERROR);
+            console.log(response);
+        }
+        localState.running = false;
+        return;
+    }
+
+    // Get the response and parse out
+    if (!response.content) {
+        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+        console.log(response);
+        localState.running = false;
+        return;
+    }
+
+    // Need to deserialize the content
+    try {
+        var content = JSON.parse(response.content);
+        console.log("Parsed response content:", content);
+        
+        if (!content.content) {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+            console.log(content);
+            localState.running = false;
+            return;
+        }
+
+        // Get the actual text from Claude response 
+        var generation = content.content[0].text;
+        console.log("Generated risks:", generation);
+
+        claude_generateRisksFromChoice(generation);
+    } catch (e) {
+        console.error("Error parsing response:", e);
+        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+        localState.running = false;
+    }
+}
+
+function claude_generateRisksFromChoice(generation) {
+    console.log("Processing risks from Claude response");
+    
+    // Get the message
+    if (generation) {
+        // Convert to a JSON string
+        var json = claude_cleanJSON(generation);
+        console.log("Cleaned JSON:", json);
+
+        // We need to convert into a JSON object and verify layout
+        var jsonObj = null;
+        try {
+            jsonObj = JSON.parse(json);
+            console.log("Parsed JSON object:", jsonObj);
+        }
+        catch (e) {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_RISKS));
+            console.log("JSON parse error:", e);
+            console.log("Raw JSON:", json);
+            return;
+        }
+        
+        // Check for different possible risk array formats
+        var risks = [];
+        localState.riskCount = 0;
+        
+        // Handle different ways risks might be organized in the response
+        if (jsonObj.Risks && Array.isArray(jsonObj.Risks)) {
+            risks = risks.concat(jsonObj.Risks);
+        }
+        
+        if (jsonObj.BusinessRisks && Array.isArray(jsonObj.BusinessRisks)) {
+            risks = risks.concat(jsonObj.BusinessRisks);
+        }
+        
+        if (jsonObj.TechnicalRisks && Array.isArray(jsonObj.TechnicalRisks)) {
+            risks = risks.concat(jsonObj.TechnicalRisks);
+        }
+        
+        if (risks.length > 0) {
+            console.log("Found risks array:", risks);
+            
+            // Set the count of risks to create
+            localState.riskCount = risks.length;
+            
+            // Loop through all risks and create them
+            for (var i = 0; i < risks.length; i++) {
+                var risk = risks[i];
+                console.log("Processing risk:", risk);
+
+                // Get the name and description
+                var riskName = risk.Name;
+                var riskDescription = risk.Description;
+
+                // Create the new risk
+                if (riskName) {
+                    var remoteRisk = {
+                        ProjectId: spiraAppManager.projectId,
+                        Name: riskName,
+                        Description: riskDescription
+                    };
+
+                    console.log("Creating risk:", remoteRisk);
+
+                    // Call the API to create
+                    const url = 'projects/' + spiraAppManager.projectId + '/risks';
+                    const body = JSON.stringify(remoteRisk);
+                    spiraAppManager.executeApi(
+                        'claudeAssistant', 
+                        '7.0', 
+                        'POST', 
+                        url, 
+                        body, 
+                        claude_generateRisksFromChoice_success, 
+                        claude_operation_failure
+                    );    
+                }
+            }
+        }
+        else {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_RISKS));
+            console.log("Invalid JSON structure - no risks arrays found:", jsonObj);
+            localState.running = false;
+            return;
+        }
+    }
+}
+
+function claude_generateRisksFromChoice_success(remoteRisk) {
+    console.log("Risk created successfully:", remoteRisk);
+    
+    // Add the risk to the requirement
+    if (remoteRisk) {
+        var requirementId = spiraAppManager.artifactId;
+        var remoteAssociation = {
+            SourceArtifactId: requirementId,
+            SourceArtifactTypeId: artifactType.REQUIREMENT,
+            DestArtifactId: remoteRisk.RiskId,
+            DestArtifactTypeId: artifactType.RISK,
+            ArtifactLinkTypeId: 1 /* Related */
+        };
+
+        console.log("Creating requirement-risk association:", remoteAssociation);
+
+        var url = 'projects/' + spiraAppManager.projectId + '/associations';
+        var body = JSON.stringify(remoteAssociation);
+        spiraAppManager.executeApi(
+            'claudeAssistant', 
+            '7.0', 
+            'POST', 
+            url, 
+            body, 
+            claude_generateRisksFromChoice_success2, 
+            claude_operation_failure
+        );
+    }
+    else {
+        localState.running = false;
+    }
+}
+
+function claude_generateRisksFromChoice_success2() {
+    console.log("Requirement-risk association created successfully");
+    
+    // Reset the dialog and force the form manager to reload once all risks have been created
+    localState.riskCount--;
+    if (localState.riskCount == 0) {
+        spiraAppManager.hideMessage();
+        spiraAppManager.reloadForm();
+        spiraAppManager.displaySuccessMessage('Successfully created Risks from Claude Assistant.');
+    }
+    localState.running = false;
+}
+
+// Update our existing process response function to handle risks
+function claude_processResponse(response) {
+    // Existing code...
+    
+    try {
+        var content = JSON.parse(response.content);
+        console.log("Parsed response content:", content);
+        
+        if (!content.content) {
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+            console.log(content);
+            localState.running = false;
+            return;
+        }
+
+        // Get the actual text from Claude response 
+        var generation = content.content[0].text;
+        console.log("Generated content:", generation);
+
+        // See what action we had and call the appropriate parsing function
+        if (localState.action == 'generateTestCases') {
+            claude_generateTestCasesFromChoice(generation);
+        }
+        else if (localState.action == 'generateTasks') {
+            claude_generateTasksFromChoice(generation);
+        }
+        else if (localState.action == 'generateSteps') {
+            claude_generateStepsFromChoice(generation);
+        }
+        else if (localState.action == 'generateRisks') {
+            claude_generateRisksFromChoice(generation);
+        }
+        else {
+            localState.running = false;
+        }
+    } catch (e) {
+
+    }
+}
+
+
+
 // Register event handlers for menu clicks
 console.log("Registering menu click events for APP_GUID:", APP_GUID);
 spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "generateTestCases", claude_generateTestCases);
 spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "testConnection", testClaudeConnection);
 spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "generateTasks", claude_generateTasks);
 spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "generateSteps", claude_generateSteps);
+spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "generateRisks", claude_generateRisks);
 
 
 // Log when the script loads

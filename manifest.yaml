@@ -44,6 +44,13 @@ menus:
         icon: icon-artifact-requirement-step
         actionTypeId: 2
         action: generateSteps
+        isActive: true
+      - name: claude_generateRisks
+        caption: Identify Risks
+        tooltip: Identify the key business and technical risks for this requirement, using Claude AI
+        icon: icon-artifact-risk
+        actionTypeId: 2
+        action: generateRisks
         isActive: true  
 
 pageContents:
@@ -120,3 +127,11 @@ productSettings:
     position: 4
     placeholder: "Write BDD scenarios for this requirement in Gherkin format with Name, Given, When, Then fields."
     tooltip: This prompt is used to generate the BDD steps for the requirement.
+
+  - settingTypeId: 9
+    settingGroup: prompts
+    name: risk_prompt
+    caption: Risk Prompt
+    position: 5
+    placeholder: "Write business and technical risks for this requirement"
+    tooltip: This prompt is used to generate the risks from the requirement.    
