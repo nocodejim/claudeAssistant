@@ -52,64 +52,18 @@ function claude_operation_failure(response) {
 function claude_verifyRequiredSettings() {
     console.log("Verifying settings...");
     
-    // Log all available settings for diagnosis
-    console.log("APP_GUID:", APP_GUID);
-    
-    // Check if SpiraAppSettings exists at all
-    if (!SpiraAppSettings) {
-        console.error("SpiraAppSettings is not defined at all");
-        return false;
-    }
-    
-    // Check if our app GUID has settings
+    // Check if SpiraAppSettings exists for this app
     if (!SpiraAppSettings[APP_GUID]) {
         console.error("No settings found for APP_GUID:", APP_GUID);
-        
-        // Log all available apps in settings to see if our GUID is different somehow
-        console.log("Available app GUIDs in settings:", Object.keys(SpiraAppSettings));
-        
         spiraAppManager.displayErrorMessage(messages.MISSING_SETTINGS);
         return false;
     }
     
     console.log("All settings for this APP_GUID:", SpiraAppSettings[APP_GUID]);
     
-    // Check for the key under different possible names
-    const possibleKeyNames = ['anthropicKey', 'api_key', 'apiKey', 'API_Key', 'anthropic_key'];
-    let foundKeyName = null;
+    // We don't need to check for API key directly anymore
+    // The system will handle the substitution of ${anthropicKey}
     
-    // Create an empty object if localState doesn't exist
-    if (!window.localState) {
-        window.localState = {};
-    }
-    
-    // Check each possible key name
-    for (const keyName of possibleKeyNames) {
-        if (SpiraAppSettings[APP_GUID][keyName]) {
-            const keyValue = SpiraAppSettings[APP_GUID][keyName];
-            foundKeyName = keyName;
-            
-            // Store the actual setting name and value
-            window.localState.apiKeyName = keyName;
-            window.localState.apiKeyValue = keyValue;
-            
-            // Log details about the found key (safely)
-            console.log(`✅ Found API key with name: ${keyName}`);
-            console.log(`Key begins with: ${keyValue.substring(0, 10)}... and ends with: ...${keyValue.substring(keyValue.length - 5)}`);
-            
-            return true;
-        }
-    }
-    
-    // If we reach here, no key was found in settings
-    console.warn("❌ No API key found in settings under any of these names:", possibleKeyNames);
-    
-    // For testing only - hardcoded key with clear logging
-    const hardcodedApiKey = "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";
-    console.warn("⚠️ USING HARDCODED API KEY FOR TESTING - This should be removed in production!");
-    console.log(`Hardcoded key ends with: ...${hardcodedApiKey.substring(hardcodedApiKey.length - 5)}`);
-    
-    window.localState.hardcodedApiKey = hardcodedApiKey;
     return true;
 }
 
@@ -131,7 +85,7 @@ function claude_executeApiRequest(systemPrompt, userPrompt, success, failure) {
 
     console.log("Using model:", model, "with temperature:", temperature);
     
-    // Request body 
+    // Request body
     var body = {
         "model": model,
         "max_tokens": 4096,
@@ -147,21 +101,16 @@ function claude_executeApiRequest(systemPrompt, userPrompt, success, failure) {
 
     console.log("API Request payload:", body);
 
-    // Headers with template substitution for system settings
+    // Headers using template substitution for API key
     var headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
         "User-agent": "Spira",
         "anthropic-version": "2023-06-01",
-        "x-api-key": "${anthropicKey}"  // Use template substitution
+        "x-api-key": "${anthropicKey}"  // Template substitution - Spira will replace this with the actual key
     };
     
-    console.log("Making API call to Claude with headers:", {
-        "Content-Type": headers["Content-Type"],
-        "Accept": headers["Accept"],
-        "anthropic-version": headers["anthropic-version"],
-        "x-api-key": "[REDACTED]"
-    });
+    console.log("Making API call to Claude");
     
     spiraAppManager.executeRest(
         APP_GUID, 
