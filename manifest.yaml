@@ -40,12 +40,19 @@ pageContents:
   - pageId: 2
     name: claude_testCaseDetails
     code: file://testCaseDetails.js
+  - pageId: 14
+    name: claude_taskDetails
+    code: file://taskDetails.js    
 
 settingGroups:
   - name: prompts
     caption: Claude Prompts
   - name: other
     caption: General Settings
+    settingGroups:
+  - name: code
+    caption: Code Generation
+
 
 menus:
   - pageId: 9
@@ -93,6 +100,26 @@ menus:
         actionTypeId: 2
         action: generateTestSteps
         isActive: true
+  - pageId: 14
+    caption: Claude Assistant
+    icon: claudeAssistant-icon
+    isActive: true
+    entries:
+      - name: claude_generateCode
+        caption: Generate Sample Code
+        tooltip: Generates sample code files for this task
+        icon: icon-artifact-sourcecode
+        actionTypeId: 2
+        action: generateCode
+        isActive: true
+      - name: claude_generateCodeWithTests
+        caption: Generate Sample Code with Tests
+        tooltip: Generates sample code files for this task along with matching unit tests
+        icon: icon-artifact-testcase
+        actionTypeId: 2
+        action: generateCodeWithTests
+        isActive: true
+
 
 productSettings:
   - settingTypeId: 9
@@ -157,3 +184,20 @@ productSettings:
     caption: Use Artifact Descriptions
     position: 2
     tooltip: Should we use the artifact descriptions as well as the names in the prompts?
+
+  - settingTypeId: 9
+    settingGroup: code
+    name: code_languages
+    caption: Coding Languages
+    position: 1
+    placeholder: "C#, Java, NodeJS, Python, Ruby, ReactJS, Angular"
+    tooltip: Specify the development languages used (comma-separated). This will be used for any code generation prompts.
+
+  - settingTypeId: 9
+    settingGroup: code
+    name: unit_test_framework
+    caption: Unit Test Frameworks
+    position: 2
+    placeholder: "C#|NUnit, Java|jUnit, NodeJS|Mocha, Python|PyTest, Ruby|Test::Unit"
+    tooltip: Specify the development languages and the corresponding unit test framework used. This will be used for any unit test generation prompts.
+
