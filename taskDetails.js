@@ -406,62 +406,90 @@ function claude_processCodeResponse(response) {
 }
 
 function claude_generateCodeFromChoice(generation) {
-    console.log("Processing code from Claude response");
+    console.log("Processing code from Claude response", generation);
     
-    // Get the message
     if (generation) {
-        // Convert to a JSON string
-        var json = claude_cleanJSON(generation);
-        console.log("Cleaned JSON:", json);
-
-        // We need to convert into a JSON object and verify layout
-        var jsonObj = null;
+        // First, let's extract the code and filename directly from the raw string
+        // without attempting JSON parsing
+        var filename = null;
+        var code = "";
+        
         try {
-            jsonObj = JSON.parse(json);
-            console.log("Parsed JSON object:", jsonObj);
-        }
-        catch (e) {
+            console.log("Starting direct string extraction approach");
+            
+            // Extract filename from the array format Claude is sending
+            var filenameMatch = generation.match(/"Filename"\s*:\s*\[\s*"([^"]+)"\s*\]/);
+            if (filenameMatch && filenameMatch[1]) {
+                filename = filenameMatch[1];
+                console.log("Extracted filename:", filename);
+            }
+            
+            // Extract the Code array content
+            var codeMatch = generation.match(/"Code"\s*:\s*\[([\s\S]*?)\]\s*\}/);
+            if (codeMatch && codeMatch[1]) {
+                var codeArrayContent = codeMatch[1];
+                console.log("Found code array content");
+                
+                // Process each line of the code array
+                var codeLines = codeArrayContent.split('\n');
+                var processedLines = [];
+                
+                for (var i = 0; i < codeLines.length; i++) {
+                    var line = codeLines[i].trim();
+                    // Check if this line is part of the code array (starts with a quote)
+                    if (line.startsWith('"')) {
+                        // Remove the opening quote and trailing quote and comma
+                        line = line.replace(/^"/, '');
+                        if (line.endsWith('",')) {
+                            line = line.slice(0, -2);
+                        } else if (line.endsWith('"')) {
+                            line = line.slice(0, -1);
+                        }
+                        
+                        // Unescape escaped quotes and other chars
+                        line = line.replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
+                        processedLines.push(line);
+                    }
+                }
+                
+                code = processedLines.join('');
+                console.log("Processed code (first 100 chars):", code.substr(0, 100));
+            }
+            
+            if (filename && code) {
+                console.log("Successfully extracted filename and code, creating document");
+                
+                // Create the source code file and attach to the task
+                var taskId = spiraAppManager.artifactId;
+                var binaryData = stringToBase64(code);
+                var remoteDocument = {
+                    ProjectId: spiraAppManager.projectId,
+                    FilenameOrUrl: filename,
+                    BinaryData: binaryData,
+                    AttachedArtifacts: [{ "ArtifactId": taskId, "ArtifactTypeId": artifactType.TASK }],
+                    Version: '1.0'
+                };
+
+                // Call the API to create the source code file
+                const url = 'projects/' + spiraAppManager.projectId + '/documents/file';
+                const body = JSON.stringify(remoteDocument);
+                spiraAppManager.executeApi(
+                    'claudeAssistant', 
+                    '7.0', 
+                    'POST', 
+                    url, 
+                    body, 
+                    claude_generateCodeFromChoice_success, 
+                    claude_operation_failure
+                );
+            } else {
+                throw new Error("Could not extract filename and code");
+            }
+        } catch (e) {
+            console.error("Error extracting code:", e);
+            console.log("Raw response:", generation);
             spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_SOURCE_CODE));
-            console.log("JSON parse error:", e);
-            console.log("Raw JSON:", json);
-            return;
-        }
-
-        if (jsonObj && jsonObj.Filename && jsonObj.Code) {
-            // Create the source code file and attach to the task
-            var taskId = spiraAppManager.artifactId;
-            var binaryData = stringToBase64(jsonObj.Code);
-            var remoteDocument = {
-                ProjectId: spiraAppManager.projectId,
-                FilenameOrUrl: jsonObj.Filename,
-                BinaryData: binaryData,
-                AttachedArtifacts: [{ "ArtifactId": taskId, "ArtifactTypeId": artifactType.TASK }],
-                Version: '1.0'
-            };
-
-            console.log("Creating source code document:", {
-                filename: jsonObj.Filename,
-                taskId: taskId,
-                projectId: spiraAppManager.projectId
-            });
-
-            // Call the API to create the source code file
-            const url = 'projects/' + spiraAppManager.projectId + '/documents/file';
-            const body = JSON.stringify(remoteDocument);
-            spiraAppManager.executeApi(
-                'claudeAssistant', 
-                '7.0', 
-                'POST', 
-                url, 
-                body, 
-                claude_generateCodeFromChoice_success, 
-                claude_operation_failure
-            );    
-        } else {
-            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_SOURCE_CODE));
-            console.log("Invalid JSON structure - missing Filename or Code:", jsonObj);
             localState.running = false;
-            return;
         }
     }
 }
@@ -579,66 +607,6 @@ function claude_processTestResponse(response) {
     }
 }
 
-function claude_generateTestFromChoice(generation) {
-    console.log("Processing test code from Claude response");
-    
-    // Get the message
-    if (generation) {
-        // Convert to a JSON string
-        var json = claude_cleanJSON(generation);
-        console.log("Cleaned test JSON:", json);
-
-        // We need to convert into a JSON object and verify layout
-        var jsonObj = null;
-        try {
-            jsonObj = JSON.parse(json);
-            console.log("Parsed test JSON object:", jsonObj);
-        }
-        catch (e) {
-            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.UNIT_TEST_CODE));
-            console.log("Test JSON parse error:", e);
-            console.log("Raw test JSON:", json);
-            return;
-        }
-
-        if (jsonObj && jsonObj.Filename && jsonObj.Code) {
-            // Create the source code file and attach to the task
-            var taskId = spiraAppManager.artifactId;
-            var binaryData = stringToBase64(jsonObj.Code);
-            var remoteDocument = {
-                ProjectId: spiraAppManager.projectId,
-                FilenameOrUrl: jsonObj.Filename,
-                BinaryData: binaryData,
-                AttachedArtifacts: [{ "ArtifactId": taskId, "ArtifactTypeId": artifactType.TASK }],
-                Version: '1.0'
-            };
-
-            console.log("Creating test code document:", {
-                filename: jsonObj.Filename,
-                taskId: taskId,
-                projectId: spiraAppManager.projectId
-            });
-
-            // Call the API to create the source code file
-            const url = 'projects/' + spiraAppManager.projectId + '/documents/file';
-            const body = JSON.stringify(remoteDocument);
-            spiraAppManager.executeApi(
-                'claudeAssistant', 
-                '7.0', 
-                'POST', 
-                url, 
-                body, 
-                claude_generateTestFromChoice_success, 
-                claude_operation_failure
-            );    
-        } else {
-            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.UNIT_TEST_CODE));
-            console.log("Invalid test JSON structure - missing Filename or Code:", jsonObj);
-            localState.running = false;
-            return;
-        }
-    }
-}
 
 function claude_generateTestFromChoice_success(response) {
     console.log("Test code document created successfully:", response);
@@ -648,6 +616,94 @@ function claude_generateTestFromChoice_success(response) {
     spiraAppManager.reloadForm();
     spiraAppManager.displaySuccessMessage('Successfully created source code file and unit test from Claude Assistant.');
     localState.running = false;
+}
+function claude_generateTestFromChoice(generation) {
+    console.log("Processing test code from Claude response", generation);
+    
+    if (generation) {
+        // First, let's extract the code and filename directly from the raw string
+        // without attempting JSON parsing
+        var filename = null;
+        var code = "";
+        
+        try {
+            console.log("Starting direct string extraction approach");
+            
+            // Extract filename from the array format Claude is sending
+            var filenameMatch = generation.match(/"Filename"\s*:\s*\[\s*"([^"]+)"\s*\]/);
+            if (filenameMatch && filenameMatch[1]) {
+                filename = filenameMatch[1];
+                console.log("Extracted filename:", filename);
+            }
+            
+            // Extract the Code array content
+            var codeMatch = generation.match(/"Code"\s*:\s*\[([\s\S]*?)\]\s*\}/);
+            if (codeMatch && codeMatch[1]) {
+                var codeArrayContent = codeMatch[1];
+                console.log("Found code array content");
+                
+                // Process each line of the code array
+                var codeLines = codeArrayContent.split('\n');
+                var processedLines = [];
+                
+                for (var i = 0; i < codeLines.length; i++) {
+                    var line = codeLines[i].trim();
+                    // Check if this line is part of the code array (starts with a quote)
+                    if (line.startsWith('"')) {
+                        // Remove the opening quote and trailing quote and comma
+                        line = line.replace(/^"/, '');
+                        if (line.endsWith('",')) {
+                            line = line.slice(0, -2);
+                        } else if (line.endsWith('"')) {
+                            line = line.slice(0, -1);
+                        }
+                        
+                        // Unescape escaped quotes and other chars
+                        line = line.replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
+                        processedLines.push(line);
+                    }
+                }
+                
+                code = processedLines.join('');
+                console.log("Processed test code (first 100 chars):", code.substr(0, 100));
+            }
+            
+            if (filename && code) {
+                console.log("Successfully extracted filename and code, creating document");
+                
+                // Create the source code file and attach to the task
+                var taskId = spiraAppManager.artifactId;
+                var binaryData = stringToBase64(code);
+                var remoteDocument = {
+                    ProjectId: spiraAppManager.projectId,
+                    FilenameOrUrl: filename,
+                    BinaryData: binaryData,
+                    AttachedArtifacts: [{ "ArtifactId": taskId, "ArtifactTypeId": artifactType.TASK }],
+                    Version: '1.0'
+                };
+
+                // Call the API to create the source code file
+                const url = 'projects/' + spiraAppManager.projectId + '/documents/file';
+                const body = JSON.stringify(remoteDocument);
+                spiraAppManager.executeApi(
+                    'claudeAssistant', 
+                    '7.0', 
+                    'POST', 
+                    url, 
+                    body, 
+                    claude_generateTestFromChoice_success, 
+                    claude_operation_failure
+                );
+            } else {
+                throw new Error("Could not extract filename and code");
+            }
+        } catch (e) {
+            console.error("Error extracting test code:", e);
+            console.log("Raw response:", generation);
+            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.UNIT_TEST_CODE));
+            localState.running = false;
+        }
+    }
 }
 
 // Log when the script loads
