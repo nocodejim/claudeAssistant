@@ -18,6 +18,42 @@ url: https://github.com/nocodejim/claude-spiraapp
 icon: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjUiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2NSA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTU5LjAwMSAyOS4wNzdDNTkuMDAxIDExLjU0MiA0NS44NDggMCAzMi41MDYgMEMxOS4xNjMgMCA2IDExLjUzNiA2IDI5LjA3N0M2IDQ2LjYxOCAxOS4xNTYgNTcuOTkyIDMyLjUwNiA1Ny45OTJDNDUuODU2IDU3Ljk5MiA1OS4wMDEgNDYuNjI0IDU5LjAwMSAyOS4wNzdaIiBmaWxsPSIjNTc1NUM0Ii8+CjxwYXRoIGQ9Ik0zMS44OTcgMjQuNDIxQzMxLjg5NyAyNC40MjEgMzQuNDQ2IDI3LjI3NSAzNC41MDcgMzAuNDU2TDQyLjkxOSAzMC40NTZDNDIuOTQzIDMwLjExOSA0Mi45NyAyOS43NzYgNDIuOTcgMjkuNDI3QzQyLjk3IDI0LjIwNiAzOC4wMSAxOS41NzUgMzMuMTQ5IDIxLjY4MUMzMi44NyAyMS44MTIgMzEuODk3IDI0LjQyMSAzMS44OTcgMjQuNDIxWiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTI5Ljc4MSAyNy4wNkMyOS43ODEgMjcuMDYgMjcuMDY0IDI3LjkwNiAyNC41ODYgMjYuNjk3TDIwLjkxMiAzMy42OThDMjEuMTk4IDMzLjg5NiAyMS40OTIgMzQuMDk1IDIxLjc5NiAzNC4yODZDMjYuNDI0IDM3LjE3NSAzMi4yNzYgMzUuMzIzIDMzLjU5NSAzMC4xNEM2OC4wNjcgMjkuNjE5IDMzLjAyOSAyOS43NDMgMzMuMDI5IDI5Ljc0M0MzMi44NDggMjkuMjY0IDI5Ljc4MSAyNy4wNiAyOS43ODEgMjcuMDZaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMjUuMTI3IDM0LjAzNUMyNS4xMjcgMzQuMDM1IDIzLjc3MSAzNi43MTkgMjAuNjk1IDM2LjkwOUwyMi44OTcgNDUuNDJDMjMuMjE4IDQ1LjM4NCAyMy41NDYgNDUuMzIyIDIzLjg3NCA0NS4yNTRDMjkuMDU0IDQ0LjIyMSAzMS43OTYgMzguNzUyIDI5LjAxMSAzNC40MDlDMjguODMgMzQuMTI5IDI1LjEyNyAzNC4wMzUgMjUuMTI3IDM0LjAzNVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xOC4zNzQgMzMuMTMxQzE4LjM3NCAzMy4xMzEgMTcuMDM4IDM2LjMyNSAxNC4yNjQgMzYuOTM3TDE2LjkyNCA0NS4yMzZDMTcuMjQ2IDQ1LjE4OSAxNy41NzQgNDUuMTMzIDE3Ljg5NiA0NS4wNTNDMjMuMDQ2IDQzLjg1NiAyNS41OTYgMzguMjk0IDIyLjY0NiAzMy44OEMyMi40NTMgMzMuNjA2IDE4LjM3NCAzMy4xMzEgMTguMzc0IDMzLjEzMVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0zOS4yMTEgMzUuNDcyQzM5LjIxMSAzNS40NzIgNDIuMDAxIDM1LjA3MSA0NC4wMDMgMzYuOThMMTAuMDIzIDM2Ljk4QzEwLjcxNCAzOS4yODMgMTEuOTAxIDQxLjI5MiAxMy40MjkgNDIuODdDMTcuNDc2IDQ2Ljk5OSAyMy45NzQgNDcuMTggMjguMjY2IDQzLjI5OUMyOC41NjUgNDMuMDE5IDM5LjIxMSAzNS40NzIgMzkuMjExIDM1LjQ3MloiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0zNi4xNTYgMjcuMTAyQzM2LjE1NiAyNy4xMDIgMzguNjE3IDI1Ljk5OCA0MS40MTUgMjYuMjk4TDQxLjA4MSAxOC4wMDhDNDAuNzU5IDE3Ljk5MSA0MC40MzEgMTcuOTg1IDQwLjEwMyAxNy45ODVDMzQuOTA3IDE3Ljk4NSAzMC41OTcgMjIuMTExIDMwLjUzMiAyNy4wOTZDMzAuNTMyIDI3LjQwOCAzNi4xNTYgMjcuMTAyIDM2LjE1NiAyNy4xMDJaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMzAuMzYzIDM1LjI5QzMwLjM2MyAzNS4yOSAzMS4yNzQgMzguMDQyIDI5Ljg0NiA0MC40MDNMMzYuNDYgNDQuNDgxQzM2LjcwMiA0NC4yMjcgMzYuOTMxIDQzLjk2MSAzNy4xNTQgNDMuNjg4QzQwLjM1NSAzOS40NDggMzguOTEgMzMuNzU5IDMzLjU5OCAzMi4yNDJDMzMuMTEzIDMyLjEwNSAzMC4zNjMgMzUuMjkgMzAuMzYzIDM1LjI5WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg=="
 version: 0.4
 
+settings:
+  - settingTypeId: 1
+    name: anthropicKey
+    caption: Claude API Key
+    isSecure: true
+    position: 1
+    tooltip: The API Key for accessing Claude, created inside your Anthropic account
+  - settingTypeId: 1
+    name: model
+    caption: Model Name
+    isSecure: false
+    position: 2
+    tooltip: The name of the Claude AI model to use (e.g. claude-3-sonnet-20240229)
+    placeholder: claude-3-sonnet-20240229
+
+pageContents:
+  - pageId: 9
+    name: claude_requirementDetails
+    code: file://requirementDetails.js
+  - pageId: 2
+    name: claude_testCaseDetails
+    code: file://testCaseDetails.js
+  - pageId: 14
+    name: claude_taskDetails
+    code: file://taskDetails.js    
+
+settingGroups:
+  - name: prompts
+    caption: Claude Prompts
+  - name: other
+    caption: General Settings
+    settingGroups:
+  - name: code
+    caption: Code Generation
+
+
 menus:
   - pageId: 9
     caption: Claude Assistant
@@ -51,34 +87,39 @@ menus:
         icon: icon-artifact-risk
         actionTypeId: 2
         action: generateRisks
-        isActive: true  
+        isActive: true
+  - pageId: 2
+    caption: Claude Assistant
+    icon: claudeAssistant-icon
+    isActive: true
+    entries: 
+      - name: claude_generateTestSteps
+        caption: Generate Test Steps
+        tooltip: Generate test steps for this test case, using Claude AI
+        icon: icon-artifact-teststep
+        actionTypeId: 2
+        action: generateTestSteps
+        isActive: true
+  - pageId: 14
+    caption: Claude Assistant
+    icon: claudeAssistant-icon
+    isActive: true
+    entries:
+      - name: claude_generateCode
+        caption: Generate Sample Code
+        tooltip: Generates sample code files for this task
+        icon: icon-artifact-sourcecode
+        actionTypeId: 2
+        action: generateCode
+        isActive: true
+      - name: claude_generateCodeWithTests
+        caption: Generate Sample Code with Tests
+        tooltip: Generates sample code files for this task along with matching unit tests
+        icon: icon-artifact-testcase
+        actionTypeId: 2
+        action: generateCodeWithTests
+        isActive: true
 
-pageContents:
-  - pageId: 9
-    name: claude_requirementDetails
-    code: file://requirementDetails.js
-    css: file://claudeAssistant.css
-
-settingGroups:
-  - name: prompts
-    caption: Claude Prompts
-  - name: other
-    caption: General Settings
-
-settings:
-  - settingTypeId: 1
-    name: anthropicKey
-    caption: Claude API Key
-    isSecure: true
-    position: 1
-    tooltip: The API Key for accessing Claude, created inside your Anthropic account
-  - settingTypeId: 1
-    name: model
-    caption: Model Name
-    isSecure: false
-    position: 2
-    tooltip: The name of the Claude AI model to use (e.g. claude-3-sonnet-20240229)
-    placeholder: claude-3-sonnet-20240229
 
 productSettings:
   - settingTypeId: 9
@@ -86,7 +127,7 @@ productSettings:
     name: global_prompt
     caption: Global Prompt
     position: 1
-    placeholder: You are a business analyst that only speaks in JSON. Do not generate output that isn't in properly formatted JSON.
+    placeholder: You are a business analyst that only speaks in JSON
     tooltip: This prompt is used to set the background system prompt, before the individual operations.
 
   - settingTypeId: 9
@@ -94,8 +135,40 @@ productSettings:
     name: testcase_prompt
     caption: Test Case Prompt
     position: 2
-    placeholder: "Write the test cases for the following software requirement. For each test case include the description, input and expected output in the following format { \"Description\": [plain text], \"Input\": [plain text], \"ExpectedOutput\": [plain text] }"
+    placeholder: Write test cases for this requirement with description, input, and expected output fields
     tooltip: This prompt is used to generate the test cases from the requirement.
+
+  - settingTypeId: 9
+    settingGroup: prompts
+    name: task_prompt
+    caption: Task Prompt
+    position: 3
+    placeholder: Write development tasks for this requirement with name and description fields
+    tooltip: This prompt is used to generate the tasks from the requirement.
+
+  - settingTypeId: 9
+    settingGroup: prompts
+    name: bdd_prompt
+    caption: BDD Prompt
+    position: 4
+    placeholder: Write BDD scenarios for this requirement in Gherkin format with Name, Given, When, Then fields
+    tooltip: This prompt is used to generate the BDD steps for the requirement.
+
+  - settingTypeId: 9
+    settingGroup: prompts
+    name: risk_prompt
+    caption: Risk Prompt
+    position: 5
+    placeholder: Write business and technical risks for this requirement
+    tooltip: This prompt is used to generate the risks from the requirement.
+
+  - settingTypeId: 9
+    settingGroup: prompts
+    name: teststep_prompt
+    caption: Test Step Prompt
+    position: 6
+    placeholder: Write steps for this test case with description, expected result, and sample data fields
+    tooltip: This prompt is used to generate test steps for a test case.
 
   - settingTypeId: 1
     settingGroup: other
@@ -103,7 +176,7 @@ productSettings:
     caption: Temperature
     position: 1
     placeholder: 0.2
-    tooltip: Temperature is a number between 0 and 1 (the default is 0.2). Temperature is used to control the output's randomness. A higher temperature means a more random output, a lower temperature makes the output more deterministic
+    tooltip: Temperature is a number between 0 and 1 (the default is 0.2). Temperature is used to control the output's randomness.
 
   - settingTypeId: 10
     settingGroup: other
@@ -113,25 +186,18 @@ productSettings:
     tooltip: Should we use the artifact descriptions as well as the names in the prompts?
 
   - settingTypeId: 9
-    settingGroup: prompts
-    name: task_prompt
-    caption: Task Prompt
-    position: 3
-    placeholder: "Write the development tasks for the following software requirement. For each task include the name and description in the following format { \"Tasks\": [{ \"Name\": [name in plain text], \"Description\": [description in plain text] }] }"
-    tooltip: This prompt is used to generate the tasks from the requirement.
+    settingGroup: code
+    name: code_languages
+    caption: Coding Languages
+    position: 1
+    placeholder: "C#, Java, NodeJS, Python, Ruby, ReactJS, Angular"
+    tooltip: Specify the development languages used (comma-separated). This will be used for any code generation prompts.
 
   - settingTypeId: 9
-    settingGroup: prompts
-    name: bdd_prompt
-    caption: BDD Prompt
-    position: 4
-    placeholder: "Write BDD scenarios for this requirement in Gherkin format with Name, Given, When, Then fields."
-    tooltip: This prompt is used to generate the BDD steps for the requirement.
+    settingGroup: code
+    name: unit_test_framework
+    caption: Unit Test Frameworks
+    position: 2
+    placeholder: "C#|NUnit, Java|jUnit, NodeJS|Mocha, Python|PyTest, Ruby|Test::Unit"
+    tooltip: Specify the development languages and the corresponding unit test framework used. This will be used for any unit test generation prompts.
 
-  - settingTypeId: 9
-    settingGroup: prompts
-    name: risk_prompt
-    caption: Risk Prompt
-    position: 5
-    placeholder: "Write business and technical risks for this requirement"
-    tooltip: This prompt is used to generate the risks from the requirement.    
