@@ -4,12 +4,9 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
-    'riskDetails.js',
+    'modules/*.js',
     '!node_modules/**',
     '!jest.config.js',
     '!coverage/**'
-  ],
-  moduleNameMapper: {
-    '^file://(.*)$': '<rootDir>/$1'
-  }
+  ]
 };

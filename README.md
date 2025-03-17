@@ -164,3 +164,33 @@ If you encounter issues:
 ## Support
 
 For support or to report issues, please contact the development team through GitHub.
+
+## Testing
+
+This project includes a comprehensive test suite using Jest. The tests are structured in a modular way to allow for proper unit testing despite the custom file import mechanism used by SpiraApps.
+
+### Running Tests
+
+To run all tests:
+
+```bash
+npm test
+```
+
+For test coverage report:
+
+```bash
+npm test -- --coverage
+```
+
+### Test Structure
+
+The tests are organized as follows:
+
+1. Module wrappers in the `modules/` directory that export functions from each source file
+2. Test files in the `tests/` directory that import and test these modules
+3. Mocked global objects and dependencies to isolate each component for testing
+
+### Adding Tests
+
+When adding new features, please create corresponding tests following the established patterns.
