@@ -71,84 +71,258 @@ All test files should follow the naming pattern:
 [filename].test.js
 ```
 
-## Writing Tests
+## Files That Need Testing
 
-### Basic Test Structure
+Based on the project structure, the following files should be prioritized for testing:
+
+### 1. Core Utility Files
+- **common.js**: Contains essential utility functions used throughout the application
+- **claudeAssistant.js**: Manages Claude API connections and request formatting
+- **constants.js**: Defines constants, messages, and prompts used across the application
+
+### 2. Feature-Specific Files
+- **riskDetails.js**: Risk management functionality
+- **requirementDetails.js**: Requirements management functionality
+- **taskDetails.js**: Task management and code generation features
+- **testCaseDetails.js**: Test case management features
+
+### Test Priority Order and Rationale
+
+1. **common.js** (High Priority)
+   - Contains core utility functions used by all other modules
+   - Functions are small and focused, making them easy to test
+   - Key functions to test:
+     - `claude_createRegexFromString`: Tests should verify proper regex creation
+     - `claude_cleanJSON`: Essential for processing Claude API responses
+     - `claude_operation_failure`: Error handling function used throughout the app
+
+2. **claudeAssistant.js** (High Priority)
+   - Manages the API connection to Claude
+   - Key functions to test:
+     - `claude_verifyRequiredSettings`: Critical for ensuring API configuration
+     - `claude_executeApiRequest`: Core function for API communication
+   - Testing this file provides confidence in the application's primary integration point
+
+3. **constants.js** (Medium Priority)
+   - While mostly definitions, testing ensures constants remain as expected
+   - Verify that message templates have the expected placeholders
+   - Confirm that prompt structures remain consistent
+
+4. **taskDetails.js** (High Priority)
+   - Complex functionality for generating code and tests
+   - Contains critical business logic for task management
+   - Strong candidate for testing due to complex functions:
+     - `claude_generateCode`
+     - `claude_generateCodeWithTests`
+     - `claude_processCodeResponse`
+
+5. **testCaseDetails.js** (Medium Priority)
+   - Manages test case generation
+   - Key functions to test:
+     - `claude_generateTestSteps`
+     - `claude_processTestStepResponse`
+
+6. **requirementDetails.js** (Medium Priority)
+   - Complex, with multiple feature areas
+   - Handles requirements, test cases, tasks, steps, and risks
+   - Test prioritization should focus on:
+     - `claude_generateTestCases`
+     - `claude_generateTasks`
+     - `claude_generateSteps`
+     - `claude_generateRisks`
+
+## Guidelines for Creating Tests
+
+### Testing Approach for Core Files
+
+When testing the core utility files, focus on:
+
+1. **common.js**:
+   - Ensure `claude_cleanJSON` correctly handles different JSON formats (with/without code blocks)
+   - Verify `claude_createRegexFromString` creates valid regex objects
+   - Test `claude_operation_failure` handles different error scenarios
+
+2. **claudeAssistant.js**:
+   - Mock `SpiraAppSettings` with different configurations to test `claude_verifyRequiredSettings`
+   - Test `claude_executeApiRequest` formats requests correctly
+   - Verify the integration with `spiraAppManager.executeRest`
+
+### Testing Approach for Feature Files
+
+For each feature file, the testing pattern should be:
+
+1. **Setup Mocking**:
+   - Mock all dependencies (`common.js`, `claudeAssistant.js`, `constants.js`)
+   - Set up global objects (`localState`, `spiraAppManager`, etc.)
+   - Create mockable content by removing direct `file://` imports
+
+2. **Test File Structure**:
+   - Verify the initial state and imports
+   - Test event registrations
+
+3. **Feature-Specific Tests**:
+   - Test each major function with various inputs
+   - Verify error handling
+   - Test API response processing
+   - Test UI interactions through mocked `spiraAppManager`
+
+### Example Test Structure for taskDetails.js
 
 ```javascript
-// Import or require the module you're testing
-// For our custom file includes, we use mocks
+// Setup globals and mocks
+global.localState = {};
+global.spiraAppManager = {
+  registerEvent_menuEntryClick: jest.fn(),
+  displayErrorMessage: jest.fn(),
+  displayWarningMessage: jest.fn(),
+  displaySuccessMessage: jest.fn(),
+  executeApi: jest.fn(),
+  executeRest: jest.fn(),
+  canCreateArtifactType: jest.fn(),
+  createComboDialog: jest.fn(),
+  hideMessage: jest.fn(),
+  reloadForm: jest.fn()
+};
+global.SpiraAppSettings = {
+  "APP_GUID": {
+    model: "claude-3-sonnet-20240229",
+    temperature: "0.2",
+    code_languages: "JavaScript,Python,Java",
+    unit_test_framework: "JavaScript|Jest,Python|PyTest,Java|JUnit"
+  }
+};
+global.artifactType = {
+  TASK: 6,
+  DOCUMENT: 13
+};
+global.messages = {
+  PERMISSION_ERROR: "Claude Assistant: Sorry, you are not permitted to perform this action",
+  WAIT_FOR_OTHER_JOB: "Claude Assistant: Cannot generate {0} as another job is running. Please wait for it to finish!",
+  ARTIFACT_SOURCE_CODE: "source code"
+};
 
-// Describe block groups related tests
-describe('Module or Function Name', () => {
-  // Setup that runs before each test
+// Mock dependencies
+jest.mock('../common.js', () => ({
+  claude_cleanJSON: jest.fn(str => str.replace(/```json\n?|```/g, '')),
+  claude_operation_failure: jest.fn()
+}), { virtual: true });
+
+jest.mock('../claudeAssistant.js', () => ({
+  claude_verifyRequiredSettings: jest.fn(() => true),
+  claude_executeApiRequest: jest.fn()
+}), { virtual: true });
+
+// Create test cases for each major function
+describe('taskDetails.js', () => {
   beforeEach(() => {
-    // Initialize or reset variables, mocks, etc.
+    // Reset mocks and global state
+    jest.clearAllMocks();
+    global.localState = {};
   });
 
-  // Individual test case
-  test('should do something specific', () => {
-    // Arrange - set up test data
+  test('should register menu entry click events on load', () => {
+    // Execute the code
+    eval(mockableContent);
     
-    // Act - perform the action to test
-    
-    // Assert - verify the result
-    expect(actual).toEqual(expected);
+    // Verify registrations
+    expect(spiraAppManager.registerEvent_menuEntryClick).toHaveBeenCalledWith(
+      "APP_GUID", 
+      "generateCode", 
+      expect.any(Function)
+    );
+    expect(spiraAppManager.registerEvent_menuEntryClick).toHaveBeenCalledWith(
+      "APP_GUID", 
+      "generateCodeWithTests", 
+      expect.any(Function)
+    );
   });
+
+  // Test code generation flow
+  test('claude_generateCode should display dialog when user has permissions', () => {
+    // Setup
+    spiraAppManager.canCreateArtifactType.mockReturnValue(true);
+    
+    // Execute
+    eval(mockableContent);
+    global.claude_generateCode();
+    
+    // Verify
+    expect(spiraAppManager.createComboDialog).toHaveBeenCalled();
+  });
+
+  // Additional tests for other functions...
 });
 ```
 
-### Mocking Dependencies
+## Writing Robust Tests
 
-Since Claude Assistant uses a custom `file://` include mechanism instead of standard imports, we use Jest's mocking capabilities to handle dependencies.
+### Handling the Custom Import System
 
-For example, in our `riskDetails.test.js`:
+Since Claude Assistant uses a custom `file://` import mechanism, tests should:
+
+1. Create a modified version of the source file with imports removed:
 
 ```javascript
-// Mock the common.js, claudeAssistant.js, and constants.js imports
-jest.mock('../common.js', () => ({
-  claude_operation_failure: jest.fn(/* implementation */)
-}), { virtual: true });
-
-jest.mock('../claudeAssistant.js', () => ({}), { virtual: true });
-jest.mock('../constants.js', () => ({}), { virtual: true });
+const mockableContent = sourceFileContent
+  .replace(/file:\/\/.*\.js/g, '/* Import removed for testing */');
 ```
 
-### Testing Global Variables and Objects
-
-For functions that rely on global variables or objects (like `localState`), we define these in the global scope of our test file:
+2. Use `eval` carefully to execute the file in the test context:
 
 ```javascript
-global.localState = {};
+eval(mockableContent);
+```
+
+3. Provide mock implementations for all imported functions.
+
+### Testing API Functions
+
+For functions that interact with external APIs:
+
+1. Mock the API call function:
+
+```javascript
+jest.mock('../claudeAssistant.js', () => ({
+  claude_executeApiRequest: jest.fn((systemPrompt, userPrompt, success, failure) => {
+    // Simulate successful API call
+    success({
+      statusCode: 200,
+      content: JSON.stringify({
+        content: [{ text: '{"TestCases": [{"Description": "Test case 1"}]}' }]
+      })
+    });
+  })
+}), { virtual: true });
+```
+
+2. Test different API response scenarios:
+   - Success responses with valid data
+   - Success responses with invalid data
+   - Error responses
+   - Network failures
+
+### Testing UI Interactions
+
+Since the application uses `spiraAppManager` for UI operations:
+
+1. Create a complete mock of `spiraAppManager`:
+
+```javascript
 global.spiraAppManager = {
-  displayErrorMessage: jest.fn()
+  displayErrorMessage: jest.fn(),
+  displayWarningMessage: jest.fn(),
+  displaySuccessMessage: jest.fn(),
+  createComboDialog: jest.fn(),
+  // ...other methods as needed
 };
 ```
 
-## Special Considerations for Claude Assistant
-
-1. **File Includes**: Claude Assistant uses a custom file include mechanism with `file://` URLs. Our Jest configuration includes a `moduleNameMapper` to handle this.
-
-2. **Global State**: Many functions rely on a global `localState` object. Make sure to reset this between tests.
-
-3. **External Services**: For functions that call the Claude API or other external services, create mock implementations.
-
-## Adding New Tests
-
-As you add more functionality to files like `riskDetails.js`, expand the test file with additional tests. For example:
+2. Verify that UI methods are called with the correct arguments:
 
 ```javascript
-// Add more tests as the file is developed
-test('should handle risk mitigations correctly', () => {
-  // Setup
-  // ...
-  
-  // Call the function
-  // ...
-  
-  // Assert the results
-  // ...
-});
+expect(spiraAppManager.displaySuccessMessage).toHaveBeenCalledWith(
+  expect.stringContaining('Successfully created')
+);
 ```
 
 ## Best Practices
@@ -158,6 +332,9 @@ test('should handle risk mitigations correctly', () => {
 3. **Arrange, Act, Assert**: Structure your tests in this pattern
 4. **Small, Focused Tests**: Each test should verify one specific behavior
 5. **Mock External Dependencies**: Don't rely on external systems for unit tests
+6. **Reset State**: Always reset mocks and global state between tests
+7. **Test Error Handling**: Ensure proper handling of error conditions
+8. **Test Edge Cases**: Consider boundary conditions and unusual inputs
 
 ## Troubleshooting
 
@@ -166,12 +343,15 @@ test('should handle risk mitigations correctly', () => {
 1. **Jest not found**: Make sure you've run the setup script and have Jest installed
 2. **File not found errors**: Check file paths in your test imports
 3. **Mocking issues**: Verify that your mocks correctly implement the behavior needed for your tests
+4. **Globals not defined**: Ensure all required global objects are defined in your test setup
+5. **File import errors**: The custom `file://` import syntax may cause issues; use the mockable content approach
 
 ## Next Steps
 
-1. Add more tests for existing functionality
-2. Set up continuous integration to run tests automatically
-3. Implement integration tests for cross-module functionality
+1. Implement tests for `common.js` and `claudeAssistant.js` first
+2. Add tests for feature files in priority order
+3. Set up continuous integration to run tests automatically
+4. Expand test coverage to include edge cases and error scenarios
 
 ---
 
