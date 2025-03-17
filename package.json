@@ -5,6 +5,7 @@
   "author": "Ball and Chain Consulting LLC",
   "license": "MIT",
   "scripts": {
+    "test": "jest",
     "build": "node ../spiraapp-tools/spiraapp-package-generator/index.js --input=./ --output=../dist"
   }
 }
