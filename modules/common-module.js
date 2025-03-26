@@ -5,7 +5,9 @@
 
 // Common utility functions from common.js
 function claude_cleanJSON(wrappedJson) {
-  return wrappedJson.replace(/```json\n?|```/g, '');
+  if (!wrappedJson) return '';
+  // Replace all code block markers, not just JSON ones
+  return wrappedJson.replace(/```(?:json)?\n?|```/g, '');
 }
 
 function claude_createRegexFromString(string) {

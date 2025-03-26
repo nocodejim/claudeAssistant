@@ -119,6 +119,11 @@ function processTestStepResponse(response) {
     // Process the test steps
     const generation = content.content[0].text;
     generateTestStepsFromChoice(generation);
+    
+    // Record token usage if available
+    if (content.usage && content.usage.total_tokens) {
+      global.localState.tokensUse = (global.localState.tokensUse || 0) + content.usage.total_tokens;
+    }
   } catch (e) {
     global.spiraAppManager.displayErrorMessage(constants.messages.INVALID_CONTENT);
     global.localState.running = false;
@@ -187,8 +192,8 @@ function generateTestStepsFromChoice_success(remoteTestStep) {
       global.spiraAppManager.reloadGrid(global.spiraAppManager.gridIds.testCaseTestSteps);
     }
     global.spiraAppManager.displaySuccessMessage('Successfully created test steps from Claude Assistant.');
+    global.localState.running = false;
   }
-  global.localState.running = false;
 }
 
 // Export the functions
