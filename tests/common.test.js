@@ -119,6 +119,83 @@ describe('common.js', () => {
     });
   });
 
+  describe('claude_parseGeneratedJson', () => {
+    test('should parse and validate JSON with expected structure', () => {
+      // Mock localState and spiraAppManager
+      const mockLocalState = { running: true };
+      const mockErrorMessage = 'Invalid JSON structure';
+      
+      // Test with valid JSON containing expected array
+      const validJson = '{"TestSteps": [{"Description": "Step 1", "ExpectedResult": "Result 1"}]}';
+      const result = common.claude_parseGeneratedJson(validJson, 'TestSteps', mockErrorMessage, mockLocalState);
+      
+      // Verify successful parsing
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({
+        TestSteps: [{ Description: 'Step 1', ExpectedResult: 'Result 1' }]
+      });
+      expect(mockLocalState.running).toBe(true); // Should not change running state
+    });
+    
+    test('should handle invalid JSON structure', () => {
+      // Mock localState and spiraAppManager
+      const mockLocalState = { running: true };
+      const displayErrorMock = jest.fn();
+      global.spiraAppManager = { displayErrorMessage: displayErrorMock };
+      const mockErrorMessage = 'Invalid JSON structure';
+      
+      // Test with JSON missing expected array
+      const invalidJson = '{"SomethingElse": []}';
+      const result = common.claude_parseGeneratedJson(invalidJson, 'TestSteps', mockErrorMessage, mockLocalState);
+      
+      // Verify failure handling
+      expect(result.success).toBe(false);
+      expect(result.data).toBeNull();
+      expect(mockLocalState.running).toBe(false); // Should set running to false
+      expect(displayErrorMock).toHaveBeenCalledWith(mockErrorMessage);
+    });
+    
+    test('should handle parsing errors', () => {
+      // Mock localState and spiraAppManager
+      const mockLocalState = { running: true };
+      const displayErrorMock = jest.fn();
+      global.spiraAppManager = { displayErrorMessage: displayErrorMock };
+      const mockErrorMessage = 'Invalid JSON structure';
+      
+      // Test with invalid JSON that will throw a parsing error
+      const invalidJson = '{this is not valid json}';
+      const result = common.claude_parseGeneratedJson(invalidJson, 'TestSteps', mockErrorMessage, mockLocalState);
+      
+      // Verify failure handling
+      expect(result.success).toBe(false);
+      expect(result.data).toBeNull();
+      expect(mockLocalState.running).toBe(false); // Should set running to false
+      expect(displayErrorMock).toHaveBeenCalledWith(mockErrorMessage);
+    });
+    
+    test('should handle null or undefined input', () => {
+      // Mock localState and spiraAppManager
+      const mockLocalState = { running: true };
+      const displayErrorMock = jest.fn();
+      global.spiraAppManager = { displayErrorMessage: displayErrorMock };
+      const mockErrorMessage = 'Invalid JSON structure';
+      
+      // Test with null input
+      const nullResult = common.claude_parseGeneratedJson(null, 'TestSteps', mockErrorMessage, mockLocalState);
+      expect(nullResult.success).toBe(false);
+      expect(displayErrorMock).toHaveBeenCalledWith(mockErrorMessage);
+      
+      // Reset mocks
+      jest.clearAllMocks();
+      mockLocalState.running = true;
+      
+      // Test with undefined input
+      const undefinedResult = common.claude_parseGeneratedJson(undefined, 'TestSteps', mockErrorMessage, mockLocalState);
+      expect(undefinedResult.success).toBe(false);
+      expect(displayErrorMock).toHaveBeenCalledWith(mockErrorMessage);
+    });
+  });
+  
   describe('claude_operation_failure', () => {
     test('should handle different error scenarios', () => {
       // Prepare test scenarios

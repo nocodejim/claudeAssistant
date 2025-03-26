@@ -295,21 +295,22 @@ function claude_processTestStepResponse(response) {
 
 function claude_generateTestStepsFromChoice(generation) {
     // Parse and validate the JSON
-    const parseResult = claude_parseGeneratedJson(
-      generation,
-      'TestSteps',
-      messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_TEST_STEPS),
-      localState
-    );
-    
-    // If parsing failed, return early
-    if (!parseResult.success) {
-      return;
-    }
-    
-    // Process the test steps
-    const jsonObj = parseResult.data;
-    localState.testStepCount = jsonObj.TestSteps.length;
+    try {
+      // Use the existing claude_cleanJSON function to handle markdown formatting
+      const cleanedJson = claude_cleanJSON(generation);
+      const jsonObj = JSON.parse(cleanedJson);
+      
+      // Validate that we have a TestSteps array
+      if (!jsonObj || !jsonObj.TestSteps || !Array.isArray(jsonObj.TestSteps)) {
+        spiraAppManager.displayErrorMessage(
+          messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_TEST_STEPS)
+        );
+        localState.running = false;
+        return;
+      }
+      
+      // Process the test steps
+      localState.testStepCount = jsonObj.TestSteps.length;
     
     // Process test steps
     for (let i = 0; i < jsonObj.TestSteps.length; i++) {

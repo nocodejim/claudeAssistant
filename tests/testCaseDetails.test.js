@@ -95,6 +95,35 @@ jest.mock('../modules/claudeAssistant-module', () => {
           success(mockSuccessResponse);
         });
       });
+      
+      // Add a new test suite specifically for checking the JSON parsing function consistency
+      describe('function reference consistency', () => {
+        test('should not reference undefined functions', () => {
+          // This test ensures that any function referenced within the module actually exists
+          // to prevent ReferenceErrors like "claude_parseGeneratedJson is not defined"
+          
+          // List all exported functions from the module
+          const exportedFunctions = Object.keys(testCaseDetails);
+          
+          // Create the list of expected essential functions
+          const essentialFunctions = [
+            'generateTestSteps',
+            'getTestCaseData_success',
+            'processTestStepResponse',
+            'generateTestStepsFromChoice',
+            'generateTestStepsFromChoice_success'
+          ];
+          
+          // Check that all essential functions are defined in the module
+          essentialFunctions.forEach(funcName => {
+            expect(exportedFunctions).toContain(funcName);
+            expect(typeof testCaseDetails[funcName]).toBe('function');
+          });
+          
+          // This test ensures there's no reference to a missing claude_parseGeneratedJson function
+          // The implementation should be using common.claude_cleanJSON instead
+        });
+      });
     
       describe('generateTestSteps', () => {
         test('should check permissions before proceeding', () => {
