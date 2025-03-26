@@ -164,4 +164,27 @@ describe('testCaseDetails.js', () => {
     );
     expect(global.localState.running).toBe(false);
   });
+
+  test('processTestStepResponse correctly calls the test steps generation function', () => {
+    // Mock the claude_processApiResponse function
+    const originalProcessApi = common.claude_processApiResponse;
+    common.claude_processApiResponse = jest.fn((response, successCallback) => {
+      // Call the success callback with some test data
+      successCallback('{"TestSteps": []}');
+    });
+    
+    // Mock the test steps generation function
+    const originalGenerate = testCaseDetails.generateTestStepsFromChoice;
+    testCaseDetails.generateTestStepsFromChoice = jest.fn();
+    
+    // Call the function under test
+    testCaseDetails.processTestStepResponse({});
+    
+    // Verify that the generation function was called
+    expect(testCaseDetails.generateTestStepsFromChoice).toHaveBeenCalled();
+    
+    // Restore original functions
+    common.claude_processApiResponse = originalProcessApi;
+    testCaseDetails.generateTestStepsFromChoice = originalGenerate;
+  });
 });

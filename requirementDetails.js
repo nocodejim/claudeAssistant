@@ -257,77 +257,28 @@ function claude_getRequirementData_success(remoteRequirement) {
 }
 
 function claude_processResponse(response) {
-    console.log("Claude API response received:", response);
-    
-    if (!response) {
-        spiraAppManager.displayErrorMessage(messages.NO_RESPONSE);
-        localState.running = false;
-        return;
-    }
-
-    //Check for error response
-    if (response.statusCode != 200) {
-        //Error Message from Claude
-        var message = response.statusDescription;   //Summary message, try and get more detailed one
-        if (response.content) {
-            try {
-                var messageObj = JSON.parse(response.content);
-                if (messageObj.error && messageObj.error.message) {
-                    message = messageObj.error.message;
-                }
-            } catch (e) {
-                console.error("Error parsing error response:", e);
-            }
-        }
-        var code = response.statusCode;
-        if (message && code != 0) {
-            spiraAppManager.displayErrorMessage('Claude Assistant: ' + message + ' [' + code + ']');
+    // Use the common function for processing API responses
+    claude_processApiResponse(
+      response, 
+      function(generatedText) {
+        // Route to the appropriate handler based on action
+        if (localState.action === 'generateTestCases') {
+          claude_generateTestCasesFromChoice(generatedText);
+        } else if (localState.action === 'generateTasks') {
+          claude_generateTasksFromChoice(generatedText);
+        } else if (localState.action === 'generateSteps') {
+          claude_generateStepsFromChoice(generatedText);
+        } else if (localState.action === 'generateRisks') {
+          claude_generateRisksFromChoice(generatedText);
         } else {
-            spiraAppManager.displayErrorMessage(messages.UNKNOWN_ERROR);
-            console.log(response);
+          localState.running = false;
         }
-        localState.running = false;
-        return;
-    }
-
-    //Get the response and parse out
-    if (!response.content) {
-        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
-        console.log(response);
-        localState.running = false;
-        return;
-    }
-
-    //Need to deserialize the content
-    try {
-        var content = JSON.parse(response.content);
-        console.log("Parsed response content:", content);
-        
-        if (!content.content) {
-            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
-            console.log(content);
-            localState.running = false;
-            return;
-        }
-
-        // Get the actual text from Claude response 
-        var generation = content.content[0].text;
-        console.log("Generated content:", generation);
-
-        //See what action we had and call the appropriate parsing function
-        if (localState.action == 'generateTestCases') {
-            claude_generateTestCasesFromChoice(generation);
-        }
-        else {
-            localState.running = false;
-        }
-    } catch (e) {
-        console.error("Error parsing response:", e);
-        spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
-        localState.running = false;
-    }
-}
-
+      },
+      localState,
+      messages.INVALID_CONTENT
+    );
+  }
+  
 function claude_generateTestCasesFromChoice(generation) {
     console.log("Processing test cases from Claude response");
     

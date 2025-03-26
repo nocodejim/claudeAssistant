@@ -294,78 +294,53 @@ function claude_processTestStepResponse(response) {
 }
 
 function claude_generateTestStepsFromChoice(generation) {
-    console.log("Processing test steps from Claude response");
+    // Parse and validate the JSON
+    const parseResult = claude_parseGeneratedJson(
+      generation,
+      'TestSteps',
+      messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_TEST_STEPS),
+      localState
+    );
     
-    // Get the message
-    if (generation) {
-        // Convert to a JSON string
-        var json = claude_cleanJSON(generation);
-        console.log("Cleaned JSON:", json);
-
-        // We need to convert into a JSON object and verify layout
-        var jsonObj = null;
-        try {
-            jsonObj = JSON.parse(json);
-            console.log("Parsed JSON object:", jsonObj);
-        }
-        catch (e) {
-            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_TEST_STEPS));
-            console.log("JSON parse error:", e);
-            console.log("Raw JSON:", json);
-            return;
-        }
-        
-        if (jsonObj && jsonObj.TestSteps && Array.isArray(jsonObj.TestSteps)) {
-            console.log("Found test steps array:", jsonObj.TestSteps);
-            
-            // Loop through the results and get the test steps
-            localState.testStepCount = jsonObj.TestSteps.length;
-            for (var i = 0; i < jsonObj.TestSteps.length; i++) {
-                // Get each test step
-                var testStep = jsonObj.TestSteps[i];
-                console.log("Processing test step:", testStep);
-
-                // Get the 3 provided fields
-                var description = testStep.Description;
-                var expectedResult = testStep.ExpectedResult;
-                var sampleData = testStep.SampleData;
-                var testCaseId = spiraAppManager.artifactId;
-
-                // Create the new test step
-                if (description && expectedResult) {
-                    var remoteTestStep = {
-                        ProjectId: spiraAppManager.projectId,
-                        TestCaseId: testCaseId,
-                        Description: description,
-                        ExpectedResult: expectedResult,
-                        SampleData: sampleData,
-                        Position: i + 1  // Set position based on order
-                    };
-
-                    console.log("Creating test step:", remoteTestStep);
-
-                    // Call the API to create the test step
-                    const url = 'projects/' + spiraAppManager.projectId + '/test-cases/' + testCaseId + '/test-steps';
-                    const body = JSON.stringify(remoteTestStep);
-                    spiraAppManager.executeApi(
-                        'claudeAssistant', 
-                        '7.0', 
-                        'POST', 
-                        url, 
-                        body, 
-                        claude_generateTestStepsFromChoice_success, 
-                        claude_operation_failure
-                    );    
-                }
-            }
-        }
-        else {
-            spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT_NO_GENERATE.replace("{0}", messages.ARTIFACT_TEST_STEPS));
-            console.log("Invalid JSON structure - missing TestSteps array:", jsonObj);
-            return;
-        }
+    // If parsing failed, return early
+    if (!parseResult.success) {
+      return;
     }
-}
+    
+    // Process the test steps
+    const jsonObj = parseResult.data;
+    localState.testStepCount = jsonObj.TestSteps.length;
+    
+    // Process test steps
+    for (let i = 0; i < jsonObj.TestSteps.length; i++) {
+      const testStep = jsonObj.TestSteps[i];
+      const testCaseId = spiraAppManager.artifactId;
+      
+      if (testStep.Description && testStep.ExpectedResult) {
+        // Create test step in Spira
+        const remoteTestStep = {
+          ProjectId: spiraAppManager.projectId,
+          TestCaseId: testCaseId,
+          Description: testStep.Description,
+          ExpectedResult: testStep.ExpectedResult,
+          SampleData: testStep.SampleData,
+          Position: i + 1
+        };
+        
+        const url = 'projects/' + spiraAppManager.projectId + 
+                   '/test-cases/' + testCaseId + '/test-steps';
+        spiraAppManager.executeApi(
+          'claudeAssistant',
+          '7.0',
+          'POST',
+          url,
+          JSON.stringify(remoteTestStep),
+          generateTestStepsFromChoice_success,
+          claude_operation_failure
+        );
+      }
+    }
+  }
 
 function claude_generateTestStepsFromChoice_success(remoteTestStep) {
     console.log("Test step created successfully:", remoteTestStep);

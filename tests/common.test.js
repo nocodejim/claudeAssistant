@@ -94,3 +94,24 @@ describe('common.js', () => {
     expect(global.localState.running).toBe(false);
   });
 });
+
+// This should be a separate describe block, not nested inside the previous test
+describe('claude_processApiResponse', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.localState = { running: true };
+  });
+
+  test('handles null response', () => {
+    const successCallback = jest.fn();
+    common.claude_processApiResponse(null, successCallback, global.localState);
+    
+    expect(spiraAppManager.displayErrorMessage).toHaveBeenCalledWith(messages.NO_RESPONSE);
+    expect(global.localState.running).toBe(false);
+    expect(successCallback).not.toHaveBeenCalled();
+  });
+  
+  test('handles error status codes', () => {
+    // Test implementation
+  });
+});
