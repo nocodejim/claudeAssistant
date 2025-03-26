@@ -1,0 +1,157 @@
+
+> claude-assistant-spiraapp@0.2.0 test
+> jest
+
+FAIL tests/riskDetails.test.js
+  ● riskDetails.js › processResponse should handle Claude API response structure
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "{\"Mitigations\": [{\"Description\": \"Implement input validation\"}]}"
+
+    Number of calls: 0
+
+    [0m [90m 142 |[39m     
+     [90m 143 |[39m     [90m// Verify generateMitigationsFromChoice was called with correct parameter[39m
+    [31m[1m>[22m[39m[90m 144 |[39m     expect(riskDetails[33m.[39mgenerateMitigationsFromChoice)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                                                       [31m[1m^[22m[39m
+     [90m 145 |[39m       [32m'{"Mitigations": [{"Description": "Implement input validation"}]}'[39m
+     [90m 146 |[39m     )[33m;[39m
+     [90m 147 |[39m   })[33m;[39m[0m
+
+      at Object.toHaveBeenCalledWith (tests/riskDetails.test.js:144:55)
+
+  ● riskDetails.js › generateMitigationsFromChoice should process valid JSON
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    [0m [90m 158 |[39m     
+     [90m 159 |[39m     [90m// Verify mitigation creation API was called[39m
+    [31m[1m>[22m[39m[90m 160 |[39m     expect(spiraAppManager[33m.[39mexecuteApi)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m     |[39m                                        [31m[1m^[22m[39m
+     [90m 161 |[39m     [36mconst[39m apiCall [33m=[39m spiraAppManager[33m.[39mexecuteApi[33m.[39mmock[33m.[39mcalls[[35m0[39m][33m;[39m
+     [90m 162 |[39m     expect(apiCall[[35m2[39m])[33m.[39mtoBe([32m'POST'[39m)[33m;[39m
+     [90m 163 |[39m     expect(apiCall[[35m3[39m])[33m.[39mtoContain([32m'/mitigations'[39m)[33m;[39m[0m
+
+      at Object.toHaveBeenCalled (tests/riskDetails.test.js:160:40)
+
+  ● riskDetails.js › generateMitigationsFromChoice should handle invalid JSON
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "Claude Assistant: could not generate mitigations from Claude's response - please try again."
+
+    Number of calls: 0
+
+    [0m [90m 180 |[39m     
+     [90m 181 |[39m     [90m// Verify error message[39m
+    [31m[1m>[22m[39m[90m 182 |[39m     expect(spiraAppManager[33m.[39mdisplayErrorMessage)[33m.[39mtoHaveBeenCalledWith(
+     [90m     |[39m                                                 [31m[1m^[22m[39m
+     [90m 183 |[39m       constants[33m.[39mmessages[33m.[39m[33mINVALID_CONTENT_NO_GENERATE[39m[33m.[39mreplace([32m'{0}'[39m[33m,[39m constants[33m.[39mmessages[33m.[39m[33mARTIFACT_MITIGATIONS[39m)
+     [90m 184 |[39m     )[33m;[39m
+     [90m 185 |[39m     expect(global[33m.[39mlocalState[33m.[39mrunning)[33m.[39mtoBe([36mfalse[39m)[33m;[39m[0m
+
+      at Object.toHaveBeenCalledWith (tests/riskDetails.test.js:182:49)
+
+FAIL tests/menu-items.test.js
+  ● Menu Item Activation Test › all menu handlers should be exported from their respective modules
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "function"
+    Received: "undefined"
+
+    [0m [90m  9 |[39m     [90m// Check requirement details functions[39m
+     [90m 10 |[39m     expect([36mtypeof[39m requirementDetails[33m.[39mgenerateTestCases)[33m.[39mtoBe([32m'function'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 11 |[39m     expect([36mtypeof[39m requirementDetails[33m.[39mgenerateTasks)[33m.[39mtoBe([32m'function'[39m)[33m;[39m
+     [90m    |[39m                                                     [31m[1m^[22m[39m
+     [90m 12 |[39m     expect([36mtypeof[39m requirementDetails[33m.[39mgenerateSteps)[33m.[39mtoBe([32m'function'[39m)[33m;[39m
+     [90m 13 |[39m     expect([36mtypeof[39m requirementDetails[33m.[39mgenerateRisks)[33m.[39mtoBe([32m'function'[39m)[33m;[39m
+     [90m 14 |[39m     [0m
+
+      at Object.toBe (tests/menu-items.test.js:11:53)
+
+  ● Menu Item Activation Test › all function handlers should have proper implementation
+
+    TypeError: global.spiraAppManager.canCreateArtifactType is not a function
+
+    [0m [90m 13 |[39m   [36mif[39m ([33m![39mglobal[33m.[39mspiraAppManager) [36mreturn[39m[33m;[39m
+     [90m 14 |[39m   
+    [31m[1m>[22m[39m[90m 15 |[39m   [36mvar[39m canCreateTestCases [33m=[39m global[33m.[39mspiraAppManager[33m.[39mcanCreateArtifactType(constants[33m.[39martifactType[33m.[39m[33mTEST_CASE[39m)[33m;[39m
+     [90m    |[39m                                                   [31m[1m^[22m[39m
+     [90m 16 |[39m
+     [90m 17 |[39m   [90m// Verify required settings[39m
+     [90m 18 |[39m   [36mif[39m ([33m![39mclaudeAssistant[33m.[39mclaude_verifyRequiredSettings()) {[0m
+
+      at Object.canCreateArtifactType [as generateTestCases] (modules/requirementDetails-module.js:15:51)
+      at Object.generateTestCases (tests/menu-items.test.js:35:24)
+
+PASS tests/common.test.js
+  ● Console
+
+    console.log
+      { someOtherFormat: true }
+
+      at Object.log [as claude_operation_failure] (modules/common-module.js:43:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+      {}
+
+      at Object.log [as claude_operation_failure] (modules/common-module.js:43:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+      {}
+
+      at Object.log [as claude_operation_failure] (modules/common-module.js:43:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+      {}
+
+      at Object.log [as claude_operation_failure] (modules/common-module.js:43:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+      {}
+
+      at Object.log [as claude_operation_failure] (modules/common-module.js:43:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+      {}
+
+      at Object.log [as claude_operation_failure] (modules/common-module.js:43:13)
+
+    console.log
+      {}
+
+      at Object.log [as claude_operation_failure] (modules/common-module.js:43:13)
+
+PASS tests/testCaseDetails.test.js
+PASS tests/constants.test.js
+PASS tests/taskDetails.test.js
+PASS tests/requirementDetails.test.js
+PASS tests/claudeAssistant.test.js
+------------------------------|---------|----------|---------|---------|-----------------------------------------------------------------------------------
+File                          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                 
+------------------------------|---------|----------|---------|---------|-----------------------------------------------------------------------------------
+All files                     |   54.73 |    48.25 |   67.56 |   56.22 |                                                                                   
+ claudeAssistant-module.js    |     100 |    82.75 |     100 |     100 | 9,16-68                                                                           
+ common-module.js             |   47.36 |    31.95 |      80 |   53.08 | 55-118                                                                            
+ constants-module.js          |     100 |      100 |     100 |     100 |                                                                                   
+ requirementDetails-module.js |   33.92 |    19.23 |    37.5 |   33.94 | 19,81-191,236-239,251-309                                                         
+ riskDetails-module.js        |   52.88 |    59.01 |      80 |   52.94 | 19,76-82,109-111,117-136,141-144,152-155,165-170,182-188,225-244                  
+ taskDetails-module.js        |   47.32 |    47.56 |   58.33 |   48.03 | 27-28,40,45-48,79,113-196,228,237-239,262-264,272-274,281,286-287,322-325,337-362 
+ testCaseDetails-module.js    |   97.33 |    89.09 |     100 |   98.63 | 125                                                                               
+------------------------------|---------|----------|---------|---------|-----------------------------------------------------------------------------------
+
+Test Suites: 2 failed, 6 passed, 8 total
+Tests:       5 failed, 66 passed, 71 total
+Snapshots:   0 total
+Time:        1.135 s
+Ran all test suites.

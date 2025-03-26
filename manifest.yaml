@@ -46,6 +46,10 @@ pageContents:
     name: claude_taskDetails
     code: file://taskDetails.js
     css: file://claudeAssistant.css
+  - pageId: 7
+    name: claude_riskDetails
+    code: file://riskDetails.js
+    css: file://claudeAssistant.css    
 
 settingGroups:
   - name: prompts
@@ -121,6 +125,19 @@ menus:
         icon: icon-artifact-testcase
         actionTypeId: 2
         action: generateCodeWithTests
+        isActive: true
+
+  - pageId: 7
+    caption: Claude Assistant
+    icon: claudeAssistant-icon
+    isActive: true
+    entries: 
+      - name: claude_generateMitigations
+        caption: Generate Mitigations
+        tooltip: Generate mitigations to reduce the exposure of this risk, using Claude AI
+        icon: icon-artifact-risk-mitigation
+        actionTypeId: 2
+        action: generateMitigations
         isActive: true
 
 

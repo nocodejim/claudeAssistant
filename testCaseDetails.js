@@ -26,7 +26,7 @@ const artifactType = {
 let localState = {};
 
 // Register menu entry click events
-spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "generateTestSteps", claude_generateTestSteps);
+spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "claude_generateTestSteps", claude_generateTestSteps);
 
 // Verify required settings - similar to the function in requirementDetails.js
 function claude_verifyRequiredSettings() {
@@ -312,36 +312,41 @@ function claude_generateTestStepsFromChoice(generation) {
       // Process the test steps
       localState.testStepCount = jsonObj.TestSteps.length;
     
-    // Process test steps
-    for (let i = 0; i < jsonObj.TestSteps.length; i++) {
-      const testStep = jsonObj.TestSteps[i];
-      const testCaseId = spiraAppManager.artifactId;
-      
-      if (testStep.Description && testStep.ExpectedResult) {
-        // Create test step in Spira
-        const remoteTestStep = {
-          ProjectId: spiraAppManager.projectId,
-          TestCaseId: testCaseId,
-          Description: testStep.Description,
-          ExpectedResult: testStep.ExpectedResult,
-          SampleData: testStep.SampleData,
-          Position: i + 1
-        };
+      // Process test steps
+      for (let i = 0; i < jsonObj.TestSteps.length; i++) {
+        const testStep = jsonObj.TestSteps[i];
+        const testCaseId = spiraAppManager.artifactId;
         
-        const url = 'projects/' + spiraAppManager.projectId + 
-                   '/test-cases/' + testCaseId + '/test-steps';
-        spiraAppManager.executeApi(
-          'claudeAssistant',
-          '7.0',
-          'POST',
-          url,
-          JSON.stringify(remoteTestStep),
-          generateTestStepsFromChoice_success,
-          claude_operation_failure
-        );
+        if (testStep.Description && testStep.ExpectedResult) {
+          // Create test step in Spira
+          const remoteTestStep = {
+            ProjectId: spiraAppManager.projectId,
+            TestCaseId: testCaseId,
+            Description: testStep.Description,
+            ExpectedResult: testStep.ExpectedResult,
+            SampleData: testStep.SampleData,
+            Position: i + 1
+          };
+          
+          const url = 'projects/' + spiraAppManager.projectId + 
+                     '/test-cases/' + testCaseId + '/test-steps';
+          spiraAppManager.executeApi(
+            'claudeAssistant',
+            '7.0',
+            'POST',
+            url,
+            JSON.stringify(remoteTestStep),
+            claude_generateTestStepsFromChoice_success,  // Fixed: Added 'claude_' prefix
+            claude_operation_failure
+          );
+        }
       }
+    } catch (e) {
+      console.error("Error parsing test steps JSON:", e);
+      spiraAppManager.displayErrorMessage(messages.INVALID_CONTENT);
+      localState.running = false;
     }
-  }
+}
 
 function claude_generateTestStepsFromChoice_success(remoteTestStep) {
     console.log("Test step created successfully:", remoteTestStep);

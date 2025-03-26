@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1743015754428" clover="3.2.0">
-  <project timestamp="1743015754428" name="All files">
-    <metrics statements="413" coveredstatements="236" conditionals="341" coveredconditionals="158" methods="32" coveredmethods="21" elements="786" coveredelements="415" complexity="0" loc="413" ncloc="413" packages="1" files="7" classes="7"/>
+<coverage generated="1743026551215" clover="3.2.0">
+  <project timestamp="1743026551215" name="All files">
+    <metrics statements="514" coveredstatements="289" conditionals="402" coveredconditionals="194" methods="37" coveredmethods="25" elements="953" coveredelements="508" complexity="0" loc="514" ncloc="514" packages="1" files="7" classes="7"/>
     <file name="claudeAssistant-module.js" path="C:\projects\claudeAssistant\modules\claudeAssistant-module.js">
       <metrics statements="18" coveredstatements="18" conditionals="29" coveredconditionals="24" methods="2" coveredmethods="2"/>
       <line num="8" count="3" type="cond" truecount="4" falsecount="0"/>
@@ -21,7 +21,7 @@
       <line num="59" count="2" type="stmt"/>
       <line num="68" count="2" type="cond" truecount="1" falsecount="1"/>
       <line num="69" count="2" type="stmt"/>
-      <line num="83" count="1" type="stmt"/>
+      <line num="83" count="2" type="stmt"/>
     </file>
     <file name="common-module.js" path="C:\projects\claudeAssistant\modules\common-module.js">
       <metrics statements="81" coveredstatements="43" conditionals="97" coveredconditionals="31" methods="5" coveredmethods="4"/>
@@ -105,22 +105,22 @@
       <line num="162" count="1" type="cond" truecount="1" falsecount="1"/>
       <line num="163" count="1" type="stmt"/>
       <line num="165" count="1" type="stmt"/>
-      <line num="170" count="1" type="stmt"/>
+      <line num="170" count="2" type="stmt"/>
     </file>
     <file name="constants-module.js" path="C:\projects\claudeAssistant\modules\constants-module.js">
       <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-      <line num="7" count="4" type="stmt"/>
-      <line num="18" count="4" type="stmt"/>
-      <line num="27" count="4" type="stmt"/>
-      <line num="57" count="4" type="stmt"/>
+      <line num="7" count="6" type="stmt"/>
+      <line num="18" count="6" type="stmt"/>
+      <line num="27" count="6" type="stmt"/>
+      <line num="57" count="6" type="stmt"/>
     </file>
     <file name="requirementDetails-module.js" path="C:\projects\claudeAssistant\modules\requirementDetails-module.js">
       <metrics statements="109" coveredstatements="37" conditionals="78" coveredconditionals="15" methods="8" coveredmethods="3"/>
-      <line num="7" count="1" type="stmt"/>
-      <line num="8" count="1" type="stmt"/>
-      <line num="9" count="1" type="stmt"/>
-      <line num="13" count="3" type="cond" truecount="1" falsecount="1"/>
-      <line num="15" count="3" type="stmt"/>
+      <line num="7" count="2" type="stmt"/>
+      <line num="8" count="2" type="stmt"/>
+      <line num="9" count="2" type="stmt"/>
+      <line num="13" count="4" type="cond" truecount="1" falsecount="1"/>
+      <line num="15" count="4" type="stmt"/>
       <line num="18" count="3" type="cond" truecount="1" falsecount="1"/>
       <line num="19" count="0" type="stmt"/>
       <line num="23" count="3" type="cond" truecount="4" falsecount="0"/>
@@ -224,18 +224,119 @@
       <line num="302" count="0" type="stmt"/>
       <line num="304" count="0" type="stmt"/>
       <line num="309" count="0" type="stmt"/>
-      <line num="313" count="1" type="stmt"/>
+      <line num="313" count="2" type="stmt"/>
     </file>
     <file name="riskDetails-module.js" path="C:\projects\claudeAssistant\modules\riskDetails-module.js">
-      <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
-      <line num="7" count="1" type="stmt"/>
+      <metrics statements="102" coveredstatements="54" conditionals="61" coveredconditionals="36" methods="5" coveredmethods="4"/>
+      <line num="7" count="2" type="stmt"/>
+      <line num="8" count="2" type="stmt"/>
+      <line num="9" count="2" type="stmt"/>
+      <line num="13" count="3" type="cond" truecount="1" falsecount="1"/>
+      <line num="15" count="3" type="stmt"/>
+      <line num="18" count="3" type="cond" truecount="1" falsecount="1"/>
+      <line num="19" count="0" type="stmt"/>
+      <line num="23" count="3" type="cond" truecount="4" falsecount="0"/>
+      <line num="24" count="1" type="stmt"/>
+      <line num="27" count="1" type="stmt"/>
+      <line num="31" count="2" type="stmt"/>
+      <line num="37" count="2" type="cond" truecount="2" falsecount="0"/>
+      <line num="38" count="1" type="stmt"/>
+      <line num="39" count="1" type="stmt"/>
+      <line num="43" count="1" type="stmt"/>
+      <line num="44" count="1" type="stmt"/>
+      <line num="45" count="1" type="stmt"/>
+      <line num="58" count="2" type="cond" truecount="2" falsecount="0"/>
+      <line num="60" count="1" type="stmt"/>
+      <line num="63" count="1" type="stmt"/>
+      <line num="64" count="1" type="cond" truecount="4" falsecount="1"/>
+      <line num="67" count="1" type="stmt"/>
+      <line num="70" count="1" type="cond" truecount="1" falsecount="1"/>
+      <line num="71" count="1" type="cond" truecount="4" falsecount="1"/>
+      <line num="74" count="1" type="stmt"/>
+      <line num="76" count="0" type="stmt"/>
+      <line num="80" count="0" type="stmt"/>
+      <line num="81" count="0" type="stmt"/>
+      <line num="82" count="0" type="stmt"/>
+      <line num="86" count="1" type="stmt"/>
+      <line num="87" count="1" type="cond" truecount="4" falsecount="1"/>
+      <line num="90" count="1" type="stmt"/>
+      <line num="94" count="1" type="stmt"/>
+      <line num="102" count="1" type="stmt"/>
+      <line num="103" count="1" type="stmt"/>
+      <line num="108" count="2" type="cond" truecount="1" falsecount="1"/>
+      <line num="109" count="0" type="stmt"/>
+      <line num="110" count="0" type="stmt"/>
+      <line num="111" count="0" type="stmt"/>
+      <line num="115" count="2" type="cond" truecount="1" falsecount="1"/>
+      <line num="117" count="0" type="stmt"/>
+      <line num="118" count="0" type="cond" truecount="0" falsecount="2"/>
+      <line num="119" count="0" type="stmt"/>
+      <line num="120" count="0" type="stmt"/>
+      <line num="121" count="0" type="cond" truecount="0" falsecount="4"/>
+      <line num="122" count="0" type="stmt"/>
+      <line num="125" count="0" type="stmt"/>
+      <line num="128" count="0" type="stmt"/>
+      <line num="129" count="0" type="cond" truecount="0" falsecount="4"/>
+      <line num="130" count="0" type="stmt"/>
+      <line num="132" count="0" type="stmt"/>
+      <line num="133" count="0" type="stmt"/>
+      <line num="135" count="0" type="stmt"/>
+      <line num="136" count="0" type="stmt"/>
+      <line num="140" count="2" type="cond" truecount="1" falsecount="1"/>
+      <line num="141" count="0" type="stmt"/>
+      <line num="142" count="0" type="stmt"/>
+      <line num="143" count="0" type="stmt"/>
+      <line num="144" count="0" type="stmt"/>
+      <line num="148" count="2" type="stmt"/>
+      <line num="149" count="2" type="stmt"/>
+      <line num="151" count="2" type="cond" truecount="4" falsecount="1"/>
+      <line num="152" count="0" type="stmt"/>
+      <line num="153" count="0" type="stmt"/>
+      <line num="154" count="0" type="stmt"/>
+      <line num="155" count="0" type="stmt"/>
+      <line num="159" count="2" type="stmt"/>
+      <line num="162" count="2" type="cond" truecount="1" falsecount="1"/>
+      <line num="163" count="2" type="stmt"/>
+      <line num="165" count="0" type="stmt"/>
+      <line num="168" count="0" type="stmt"/>
+      <line num="169" count="0" type="stmt"/>
+      <line num="170" count="0" type="stmt"/>
+      <line num="176" count="2" type="stmt"/>
+      <line num="178" count="2" type="stmt"/>
+      <line num="179" count="2" type="stmt"/>
+      <line num="180" count="2" type="stmt"/>
+      <line num="182" count="0" type="stmt"/>
+      <line num="185" count="0" type="stmt"/>
+      <line num="186" count="0" type="stmt"/>
+      <line num="187" count="0" type="stmt"/>
+      <line num="188" count="0" type="stmt"/>
+      <line num="191" count="2" type="cond" truecount="4" falsecount="1"/>
+      <line num="193" count="2" type="stmt"/>
+      <line num="195" count="2" type="stmt"/>
+      <line num="197" count="2" type="stmt"/>
+      <line num="200" count="2" type="stmt"/>
+      <line num="201" count="2" type="stmt"/>
+      <line num="204" count="2" type="cond" truecount="1" falsecount="1"/>
+      <line num="205" count="2" type="stmt"/>
+      <line num="212" count="2" type="stmt"/>
+      <line num="213" count="2" type="stmt"/>
+      <line num="225" count="0" type="stmt"/>
+      <line num="228" count="0" type="stmt"/>
+      <line num="229" count="0" type="stmt"/>
+      <line num="235" count="0" type="stmt"/>
+      <line num="238" count="0" type="cond" truecount="0" falsecount="2"/>
+      <line num="239" count="0" type="stmt"/>
+      <line num="240" count="0" type="stmt"/>
+      <line num="241" count="0" type="stmt"/>
+      <line num="244" count="0" type="stmt"/>
+      <line num="248" count="2" type="stmt"/>
     </file>
     <file name="taskDetails-module.js" path="C:\projects\claudeAssistant\modules\taskDetails-module.js">
       <metrics statements="127" coveredstatements="61" conditionals="82" coveredconditionals="39" methods="12" coveredmethods="7"/>
-      <line num="7" count="1" type="stmt"/>
-      <line num="8" count="1" type="stmt"/>
-      <line num="9" count="1" type="stmt"/>
-      <line num="12" count="1" type="stmt"/>
+      <line num="7" count="2" type="stmt"/>
+      <line num="8" count="2" type="stmt"/>
+      <line num="9" count="2" type="stmt"/>
+      <line num="12" count="2" type="stmt"/>
       <line num="22" count="4" type="cond" truecount="1" falsecount="1"/>
       <line num="24" count="4" type="stmt"/>
       <line num="27" count="0" type="stmt"/>
@@ -358,13 +459,13 @@
       <line num="358" count="0" type="stmt"/>
       <line num="359" count="0" type="stmt"/>
       <line num="362" count="0" type="stmt"/>
-      <line num="366" count="1" type="stmt"/>
+      <line num="366" count="2" type="stmt"/>
     </file>
     <file name="testCaseDetails-module.js" path="C:\projects\claudeAssistant\modules\testCaseDetails-module.js">
       <metrics statements="73" coveredstatements="72" conditionals="55" coveredconditionals="49" methods="5" coveredmethods="5"/>
-      <line num="7" count="1" type="stmt"/>
-      <line num="8" count="1" type="stmt"/>
-      <line num="9" count="1" type="stmt"/>
+      <line num="7" count="2" type="stmt"/>
+      <line num="8" count="2" type="stmt"/>
+      <line num="9" count="2" type="stmt"/>
       <line num="13" count="4" type="cond" truecount="1" falsecount="1"/>
       <line num="15" count="4" type="stmt"/>
       <line num="18" count="4" type="cond" truecount="2" falsecount="0"/>
@@ -434,7 +535,7 @@
       <line num="192" count="3" type="stmt"/>
       <line num="194" count="3" type="stmt"/>
       <line num="195" count="3" type="stmt"/>
-      <line num="200" count="1" type="stmt"/>
+      <line num="200" count="2" type="stmt"/>
     </file>
   </project>
 </coverage>
