@@ -28,6 +28,23 @@ let localState = {};
 // Register menu entry click events
 spiraAppManager.registerEvent_menuEntryClick(APP_GUID, "claude_generateTestSteps", claude_generateTestSteps);
 
+// Add near the top of the file
+console.log("Verification of environment:", {
+    spiraAppManager: typeof spiraAppManager !== 'undefined',
+    APP_GUID: typeof APP_GUID !== 'undefined',
+    artifactType: typeof artifactType !== 'undefined',
+    claude_verifyRequiredSettings: typeof claude_verifyRequiredSettings === 'function'
+});
+
+// Check for function references
+console.log("Function references check:", {
+    verifySettings: typeof claude_verifyRequiredSettings === 'function',
+    cleanJSON: typeof claude_cleanJSON === 'function',
+    executeApiRequest: typeof claude_executeApiRequest === 'function',
+    operationFailure: typeof claude_operation_failure === 'function',
+    getTestCaseDataSuccess: typeof claude_getTestCaseData_success === 'function'
+});
+
 // Verify required settings - similar to the function in requirementDetails.js
 function claude_verifyRequiredSettings() {
     console.log("Verifying settings...");
@@ -143,11 +160,13 @@ function claude_generateTestSteps() {
 
     // Verify required settings
     if (!claude_verifyRequiredSettings()) {
+        console.log("Required settings not verified");
         return;
     }
 
     // Make sure call not already running
     if (localState.running) {
+        console.log("Operation already running");
         spiraAppManager.displayWarningMessage(messages.WAIT_FOR_OTHER_JOB.replace("{0}", messages.ARTIFACT_TEST_STEPS));
         return;
     }
@@ -157,27 +176,21 @@ function claude_generateTestSteps() {
         "action": "generateTestSteps",
         "running": true
     };
+    console.log("LocalState set:", localState);
 
     // Don't let users try and create test steps if they do not have permission to do so
     if (!canCreateTestSteps) {
+        console.log("User lacks permissions");
         spiraAppManager.displayErrorMessage(messages.PERMISSION_ERROR);
         localState.running = false;
     }
     else {
         // Get the current test case artifact
         var testCaseId = spiraAppManager.artifactId;
-        console.log("Retrieving test case data for ID:", testCaseId);
+        console.log("Getting test case data for ID:", testCaseId);
         
         var url = 'projects/' + spiraAppManager.projectId + '/test-cases/' + testCaseId;
-        spiraAppManager.executeApi(
-            'claudeAssistant', 
-            '7.0', 
-            'GET', 
-            url, 
-            null, 
-            claude_getTestCaseData_success, 
-            claude_operation_failure
-        );
+        spiraAppManager.executeApi('claudeAssistant', '7.0', 'GET', url, null, claude_getTestCaseData_success, claude_operation_failure);
     }
 }
 
@@ -374,3 +387,7 @@ function claude_cleanJSON(wrappedJson) {
 
 // Log when the script loads
 console.log("Claude Assistant test case details script loaded at", new Date().toISOString());
+// Add at the end of the file
+console.log("Event handlers registered for test case details:", {
+    generateTestSteps: typeof claude_generateTestSteps === 'function'
+});

@@ -20,11 +20,12 @@ function generateTestCases() {
   }
 
   // Make sure call not already running
+  // IMPORTANT FIX: Direct check of global.localState.running
   if (global.localState && global.localState.running) {
     global.spiraAppManager.displayWarningMessage(
       constants.messages.WAIT_FOR_OTHER_JOB.replace("{0}", constants.messages.ARTIFACT_TEST_CASES)
     );
-    return;
+    return; // Early return after showing warning
   }
 
   // Clear local storage and specify the action
@@ -308,10 +309,152 @@ function generateTestCasesFromChoice_success3(remoteTestStep) {
   // Test step created
   global.localState.running = false;
 }
+// Add these three functions before the module.exports section
 
-// Export the functions
+function generateTasks() {
+  if (!global.spiraAppManager) return;
+  
+  var canCreateTestCases = global.spiraAppManager.canCreateArtifactType(constants.artifactType.TEST_CASE);
+
+  // Verify required settings
+  if (!claudeAssistant.claude_verifyRequiredSettings()) {
+    return;
+  }
+
+  // Make sure call not already running
+  // IMPORTANT FIX: Direct check of global.localState.running
+  if (global.localState && global.localState.running) {
+    global.spiraAppManager.displayWarningMessage(
+      constants.messages.WAIT_FOR_OTHER_JOB.replace("{0}", constants.messages.ARTIFACT_TEST_CASES)
+    );
+    return; // Early return after showing warning
+  }
+
+  // Clear local storage and specify the action
+  global.localState = {
+    "action": "generateTasks",
+    "running": true
+  };
+
+  // Don't let users try and create tasks if they do not have permission to do so
+  if (!canCreateTasks) {
+    global.spiraAppManager.displayErrorMessage(constants.messages.PERMISSION_ERROR);
+    global.localState.running = false;
+  }
+  else {
+    // Get the current requirement artifact (we need to get its name)
+    var requirementId = global.spiraAppManager.artifactId;
+    var url = 'projects/' + global.spiraAppManager.projectId + '/requirements/' + requirementId;
+    global.spiraAppManager.executeApi(
+      'claudeAssistant', 
+      '7.0', 
+      'GET', 
+      url, 
+      null, 
+      getRequirementData_success, 
+      common.claude_operation_failure
+    );
+  }
+}
+
+function generateSteps() {
+  if (!global.spiraAppManager) return;
+  
+  var canCreateTestCases = global.spiraAppManager.canCreateArtifactType(constants.artifactType.TEST_CASE);
+
+  // Verify required settings
+  if (!claudeAssistant.claude_verifyRequiredSettings()) {
+    return;
+  }
+
+  // Make sure call not already running
+  // IMPORTANT FIX: Direct check of global.localState.running
+  if (global.localState && global.localState.running) {
+    global.spiraAppManager.displayWarningMessage(
+      constants.messages.WAIT_FOR_OTHER_JOB.replace("{0}", constants.messages.ARTIFACT_TEST_CASES)
+    );
+    return; // Early return after showing warning
+  }
+
+  // Clear local storage and specify the action
+  global.localState = {
+    "action": "generateSteps",
+    "running": true
+  };
+
+  // Don't let users try and create requirement steps if they do not have permission to do so
+  if (!canModifyRequirements) {
+    global.spiraAppManager.displayErrorMessage(constants.messages.PERMISSION_ERROR);
+    global.localState.running = false;
+  }
+  else {
+    // Get the current requirement artifact (we need to get its name)
+    var requirementId = global.spiraAppManager.artifactId;
+    var url = 'projects/' + global.spiraAppManager.projectId + '/requirements/' + requirementId;
+    global.spiraAppManager.executeApi(
+      'claudeAssistant', 
+      '7.0', 
+      'GET', 
+      url, 
+      null, 
+      getRequirementData_success, 
+      common.claude_operation_failure
+    );
+  }
+}
+
+function generateRisks() {
+  if (!global.spiraAppManager) return;
+  
+  var canCreateTestCases = global.spiraAppManager.canCreateArtifactType(constants.artifactType.TEST_CASE);
+
+  // Verify required settings
+  if (!claudeAssistant.claude_verifyRequiredSettings()) {
+    return;
+  }
+
+  // Make sure call not already running
+  // IMPORTANT FIX: Direct check of global.localState.running
+  if (global.localState && global.localState.running) {
+    global.spiraAppManager.displayWarningMessage(
+      constants.messages.WAIT_FOR_OTHER_JOB.replace("{0}", constants.messages.ARTIFACT_TEST_CASES)
+    );
+    return; // Early return after showing warning
+  }
+
+  // Clear local storage and specify the action
+  global.localState = {
+    "action": "generateRisks",
+    "running": true
+  };
+
+  // Don't let users try and create risks if they do not have permission to do so
+  if (!canCreateRisks || !canModifyRequirements) {
+    global.spiraAppManager.displayErrorMessage(constants.messages.PERMISSION_ERROR);
+    global.localState.running = false;
+  }
+  else {
+    // Get the current requirement artifact (we need to get its name)
+    var requirementId = global.spiraAppManager.artifactId;
+    var url = 'projects/' + global.spiraAppManager.projectId + '/requirements/' + requirementId;
+    global.spiraAppManager.executeApi(
+      'claudeAssistant', 
+      '7.0', 
+      'GET', 
+      url, 
+      null, 
+      getRequirementData_success, 
+      common.claude_operation_failure
+    );
+  }
+}
+
+// Updated exports
 module.exports = {
   generateTestCases,
+  generateTasks,         // Added
+  generateSteps,         // Added 
+  generateRisks,         // Added
   getRequirementData_success,
   getRequirementTypes_success,
   processResponse,

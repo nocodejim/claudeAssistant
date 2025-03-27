@@ -20,11 +20,12 @@ function generateTestSteps() {
   }
 
   // Make sure call not already running
+  // IMPORTANT FIX: Direct check of global.localState.running
   if (global.localState && global.localState.running) {
     global.spiraAppManager.displayWarningMessage(
       constants.messages.WAIT_FOR_OTHER_JOB.replace("{0}", constants.messages.ARTIFACT_TEST_STEPS)
     );
-    return;
+    return; // Early return after showing warning
   }
 
   // Clear local storage and specify the action

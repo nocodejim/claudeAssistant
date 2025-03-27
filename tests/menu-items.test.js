@@ -24,12 +24,17 @@ describe('Menu Item Activation Test', () => {
   });
   
   test('all function handlers should have proper implementation', () => {
-    // Setup global objects needed for testing
     global.spiraAppManager = {
       displayErrorMessage: jest.fn(),
-      displayWarningMessage: jest.fn()
+      displayWarningMessage: jest.fn(),
+      canCreateArtifactType: jest.fn().mockReturnValue(true),
+      canModifyArtifactType: jest.fn().mockReturnValue(true)
     };
     global.localState = { running: true };
+    
+    global.constants = require('../modules/constants-module');
+    const claudeAssistant = require('../modules/claudeAssistant-module');
+    claudeAssistant.claude_verifyRequiredSettings = jest.fn().mockReturnValue(true);
     
     // Test that running handlers trigger warning about concurrent operations
     requirementDetails.generateTestCases();

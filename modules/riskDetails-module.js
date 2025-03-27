@@ -20,11 +20,12 @@ function generateMitigations() {
   }
 
   // Make sure call not already running
+  // IMPORTANT FIX: Direct check of global.localState.running
   if (global.localState && global.localState.running) {
     global.spiraAppManager.displayWarningMessage(
       constants.messages.WAIT_FOR_OTHER_JOB.replace("{0}", constants.messages.ARTIFACT_MITIGATIONS)
     );
-    return;
+    return; // Early return after showing warning
   }
 
   // Clear local storage and specify the action
@@ -160,7 +161,8 @@ function processResponse(response) {
     
     // Process based on action
     if (global.localState.action == 'generateMitigations') {
-      generateMitigationsFromChoice(generation);
+      // CHANGED: Call the exported function instead of the internal one
+      module.exports.generateMitigationsFromChoice(generation);
     } else {
       global.localState.running = false;
     }
